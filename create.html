@@ -11,13 +11,17 @@ body {
   margin: 0;
   padding: 0;
   color: #fff;
-  background-color: #f2f2f0;
-  background-color: #111;
-  background-image: url("./assets/cover.png");
-  background-size: cover;
-  background-repeat: no-repeat;
-  background-position: center;
-  background-attachment: fixed;
+  #µbackground: url("./assets/bg2.png") repeat;
+  background:
+    -webkit-linear-gradient(315deg, hsla(237.66, 93.62%, 43.78%, 1) 0%, hsla(237.66, 93.62%, 43.78%, 0) 70%),
+    -webkit-linear-gradient(65deg, hsla(51.7, 97.61%, 42.16%, 1) 10%, hsla(51.7, 97.61%, 42.16%, 0) 80%),
+    -webkit-linear-gradient(135deg, hsla(214.13, 91.53%, 42.83%, 1) 15%, hsla(214.13, 91.53%, 42.83%, 0) 80%),
+    -webkit-linear-gradient(205deg, hsla(346.13, 97.46%, 41.45%, 1) 100%, hsla(346.13, 97.46%, 41.45%, 0) 70%);
+  background:
+    linear-gradient(135deg, hsla(237.66, 93.62%, 43.78%, 1) 0%, hsla(237.66, 93.62%, 43.78%, 0) 70%),
+    linear-gradient(25deg, hsla(51.7, 97.61%, 42.16%, 1) 10%, hsla(51.7, 97.61%, 42.16%, 0) 80%),
+    linear-gradient(315deg, hsla(214.13, 91.53%, 42.83%, 1) 15%, hsla(214.13, 91.53%, 42.83%, 0) 80%),
+    linear-gradient(245deg, hsla(346.13, 97.46%, 41.45%, 1) 100%, hsla(346.13, 97.46%, 41.45%, 0) 70%);
   padding: 20px;
   overflow-x: hidden;
 
@@ -52,11 +56,13 @@ body {
 		let rpasswd = document.getElementById("rpasswd").value;
 		if(passwd != rpasswd)
 		{
-			alert("passwords doesnt match");
+			document.getElementById('wmessage').innerHTML = "Password doesn't match.";
+			document.getElementById("smessage").classList.add('red');
 		}
 		else if(passwd.length < 8)
 		{
-			alert("password must be at least 8 characters")
+			document.getElementById('wmessage').innerHTML = "Password must be at least 8 characters";
+			document.getElementById("smessage").classList.add('red');
 		}
 		else
 		{
@@ -76,11 +82,12 @@ body {
 	</script>
   </head>
   <body style="text-align:center;">
-      <div style="position:fixed;top:30%;" class="ui container">
+      <div style="position:absolute;top:50%;left:50%;margin-right:-50%;transform: translate(-50%, -50%);" class="ui container">
 		<div class="text" style="margin-bottom:16px;font-size:32px;padding:8px;"><img class="ui centered small circular image" src="./assets/logo.png" /></div>
+		<span id="smessage" class="ui label"><i class="lock icon"></i> <span id="wmessage">Wallet not found! Please, create a new one.</span></span><br><br>
 		<div style="width:25%;" id="dpasswd" class="ui tra inverted input"><input id="passwd" type="password" placeholder="Select password..."></div><br><br><br>
 		<div style="width:25%;" id="drpasswd" class="ui tra inverted input"><input id="rpasswd" type="password" placeholder="Repeat password..."></div><br><br><br>
-		<a href="#" onclick="sendpass();" id="submit" class="ui button"><i class="new icon"></i> Create wallet</a>
+		<a href="#" onclick="sendpass();" id="submit" class="ui button"><i class="add file icon"></i> Create wallet</a>
 	</div>
 </body>
 </html>
