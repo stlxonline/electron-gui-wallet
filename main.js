@@ -31,7 +31,6 @@ ipcMain.on('create-send', (event, arg) => {
 		passphrase: arg
 	  }
 	});
-	pvkey = PrivateKey
 	var privkey = privateKey.toString().replace("-----BEGIN ENCRYPTED PRIVATE KEY-----", "");
 	privkey = privkey.replace("-----END ENCRYPTED PRIVATE KEY-----", "");
 	privkey = privkey.replace(/\n/g, '')
