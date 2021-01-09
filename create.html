@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+        <title>STLX GUI Wallet</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.js" integrity="sha512-dqw6X88iGgZlTsONxZK9ePmJEFrmHwpuMrsUChjAw1mRUhUITE5QU9pkcSox+ynfLhL15Sv2al5A0LVyDCmtUw==" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.css" integrity="sha512-8bHTC73gkZ7rZ7vpqUQThUDhqcNFyYi2xgDgPDHc+GXVGHXq+xPjynxIopALmOPqzo9JZj0k6OqqewdGO3EsrQ==" crossorigin="anonymous" />
+<style>
+body {
+
+  margin: 0;
+  padding: 0;
+  color: #fff;
+  background-color: #f2f2f0;
+  background-color: #111;
+  background-image: url("./assets/cover.png");
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-attachment: fixed;
+  padding: 20px;
+  overflow-x: hidden;
+
+}
+.text {
+	text-transform: uppercase;
+	background: linear-gradient(to right, #fafafa 0%, #787878 100%);
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+}
+
+*, *::after, *::before {
+	-webkit-user-select: none;
+	-webkit-user-drag: none;
+	-webkit-app-region: no-drag;
+	cursor: default;
+}
+
+.ui.tra.inverted.input > input {
+    color: #fff;
+    opacity: 0.4;
+	color:#333;
+}
+
+.ui.tra.inverted.input > input:focus {
+    opacity: 0.8;
+}
+</style>
+	<script>
+	function sendpass() {
+		let passwd = document.getElementById("passwd").value;
+		let rpasswd = document.getElementById("rpasswd").value;
+		if(passwd != rpasswd)
+		{
+			alert("passwords doesnt match");
+		}
+		else if(passwd.length < 8)
+		{
+			alert("password must be at least 8 characters")
+		}
+		else
+		{
+			const {ipcRenderer} = require('electron');
+			// send password to main.js 
+			ipcRenderer.send('create-send', passwd );
+			// receive address from main.js
+			ipcRenderer.on('create-reply', (event, arg) => {
+			  if(arg == "created")
+			  {
+				window.location.href = "overview.html";
+			  }
+			})
+		}
+		
+	}
+	</script>
+  </head>
+  <body style="text-align:center;">
+      <div style="position:fixed;top:30%;" class="ui container">
+		<div class="text" style="margin-bottom:16px;font-size:32px;padding:8px;"><img class="ui centered small circular image" src="./assets/logo.png" /></div>
+		<div style="width:25%;" id="dpasswd" class="ui tra inverted input"><input id="passwd" type="password" placeholder="Select password..."></div><br><br><br>
+		<div style="width:25%;" id="drpasswd" class="ui tra inverted input"><input id="rpasswd" type="password" placeholder="Repeat password..."></div><br><br><br>
+		<a href="#" onclick="sendpass();" id="submit" class="ui button"><i class="new icon"></i> Create wallet</a>
+	</div>
+</body>
+</html>

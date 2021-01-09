@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset="utf-8" />
+    <title>STLX GUI Wallet</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.js" integrity="sha512-dqw6X88iGgZlTsONxZK9ePmJEFrmHwpuMrsUChjAw1mRUhUITE5QU9pkcSox+ynfLhL15Sv2al5A0LVyDCmtUw==" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.css" integrity="sha512-8bHTC73gkZ7rZ7vpqUQThUDhqcNFyYi2xgDgPDHc+GXVGHXq+xPjynxIopALmOPqzo9JZj0k6OqqewdGO3EsrQ==" crossorigin="anonymous" />
+<style>
+body {
+
+  margin: 0;
+  padding: 0;
+  color: #fff;
+  background:
+    -webkit-linear-gradient(315deg, hsla(287.91, 26.72%, 22.73%, 1) 0%, hsla(287.91, 26.72%, 22.73%, 0) 70%),
+    -webkit-linear-gradient(65deg, hsla(155.47, 31.16%, 32.41%, 1) 10%, hsla(155.47, 31.16%, 32.41%, 0) 80%),
+    -webkit-linear-gradient(135deg, hsla(270.2, 40.58%, 24.5%, 1) 15%, hsla(270.2, 40.58%, 24.5%, 0) 80%),
+    -webkit-linear-gradient(205deg, hsla(337.95, 42.36%, 22.49%, 1) 100%, hsla(337.95, 42.36%, 22.49%, 0) 70%);
+  background:
+    linear-gradient(135deg, hsla(287.91, 26.72%, 22.73%, 1) 0%, hsla(287.91, 26.72%, 22.73%, 0) 70%),
+    linear-gradient(25deg, hsla(155.47, 31.16%, 32.41%, 1) 10%, hsla(155.47, 31.16%, 32.41%, 0) 80%),
+    linear-gradient(315deg, hsla(270.2, 40.58%, 24.5%, 1) 15%, hsla(270.2, 40.58%, 24.5%, 0) 80%),
+    linear-gradient(245deg, hsla(337.95, 42.36%, 22.49%, 1) 100%, hsla(337.95, 42.36%, 22.49%, 0) 70%);
+  padding: 20px;
+  overflow-x: hidden;
+
+}
+h2 { color: #fff; }
+*, *::after, *::before {
+	-webkit-user-select: none;
+	-webkit-user-drag: none;
+	-webkit-app-region: no-drag;
+	cursor: default;
+}
+a { color: #d0d0d0; }
+</style>
+</head>
+  <script>
+	const {ipcRenderer} = require('electron');
+	// send password to main.js 
+	var address = ipcRenderer.sendSync('request', "address" );
+	var pubkey = ipcRenderer.sendSync('request', "pubkey" );
+	
+	async function postData(url = '', data = {}) {
+	  // Default options are marked with *
+	  const response = await fetch(url, {
+		method: 'POST', // *GET, POST, PUT, DELETE, etc.
+		mode: 'cors', // no-cors, *cors, same-origin
+		cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+		credentials: 'same-origin', // include, *same-origin, omit
+		headers: {
+		  'Content-Type': 'application/json'
+		  //'Content-Type': 'application/x-www-form-urlencoded',
+		},
+		redirect: 'follow', // manual, *follow, error
+		referrerPolicy: 'no-referrer', // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+		body: data // body data type must match "Content-Type" header
+	  });
+	  return response.json(); // parses JSON response into native JavaScript objects
+	}
+	
+	function copytoclipboard() {
+	  /* Get the text field */
+	  var copyText = document.getElementById("address");
+	  /* Select the text field */
+	  copyText.select();
+	  copyText.setSelectionRange(0, 99999); /* For mobile devices */
+	  /* Copy the text inside the text field */
+	  document.execCommand("copy");
+	  /* Alert the copied text */
+	  alert("Copied the text: " + copyText.value);
+	}
+	
+	function get_balance()
+	{
+		fetch('https://stlx.online/server.php?q=getbalance&address=' + address)
+		.then(response => response.text())
+		.then((response) => {
+			var obj = JSON.parse(response);
+			document.getElementById('available').innerHTML = obj.balance/10000 + " STLX";
+			document.getElementById('locked').innerHTML = obj.locked/10000 + " STLX";
+		});
+	}
+
+	function setbalance(value)
+	{
+		var amnt = document.getElementById('available').innerHTML.replace(' STLX', '');
+		amnt = parseFloat(parseFloat(amnt)*value/100);
+		document.getElementById('amount').value = amnt.toFixed(8);
+	}
+	
+	function send()
+	{
+		var decimal = 10000;
+		var vfee = 0.0001;
+		var amount = parseFloat(document.getElementById('amount').value);
+		amount = amount*decimal;
+		var dest = document.getElementById('dest').value;
+		var fee = Math.round(amount*vfee);
+		amount = parseInt(amount);
+		fee = parseInt(fee);
+		if(fee == 0) fee = 1;
+		var message = "";
+		var version = "1";
+		var date = Math.round(parseInt(Date.now())/1000)-1;
+		var txinfo = amount + "-" + fee + "-"  + dest + "-" + message + "-" + version + "-" + pubkey + "-" + date;
+		ipcRenderer.send('setToSign', txinfo);
+		var signature = ipcRenderer.sendSync('request', "sign");
+		document.getElementById('amount').value = "";
+		document.getElementById('dest').value = "";
+		document.getElementById('sendbutton').classList.add("disabled");
+		if(confirm("Send " + amount/10000 + " STLX + " + (Math.ceil(parseFloat(amount*0.0001))/10000).toFixed(4) + " STLX on fees?"))
+		{
+			// receive address from main.js
+			var txvalues = JSON.stringify({'amount' : amount, 'fee' : fee, 'dest' : dest, 'pubkey' : pubkey, 'date' : date, 'version' : version, 'message' : message, 'signature' : signature });
+			//var ldiv = document.getElementById('lastcommit');
+			//ldiv.innerHTML = mResult;
+			postData('https://stlx.online/server.php?q=transfer', txvalues)
+			  .then(data => {
+				//var obj = JSON.parse(data);
+				if(data.status == "ERROR")
+				{
+					alert("ERROR: " + data.response);
+				}
+				else
+				{
+					alert("SENT! Hash: " + data.response)
+				}
+				get_balance();
+			  });
+		}
+	}
+
+	setInterval(function() {
+		if(document.getElementById('address').value != address)
+		{
+			document.getElementById('address').value = address;
+			get_balance();
+		}
+		if(document.getElementById('dest').value.length > 160 &&  document.getElementById('amount').value.length > 0)
+		{
+			document.getElementById('sendbutton').classList.remove("disabled");
+		}
+	}, 250);
+		
+	setInterval(function() {
+		get_balance();
+	}, 30000);
+  </script>
+
+  </head>
+  <body style="text-align:center;">
+    <div style="margin-top:12px;" class="ui container">
+	
+		<div class="ui grid">
+		  <div class="four wide column">
+		  <table class="ui inverted table">
+		  <thead>
+		  <th>
+		  <div style="text-align:center;"><img class="ui centered tiny circular image" src="./assets/logo.png" /><br><span style="font-size:14px;"><b>STLX GUI WALLET v0.0.3</b>
+		  <br><span class="ui mini yellow label">TESTNET NETWORK</span></div>
+		  <div class="ui divider"></div>
+		  <div style="width:100%;" class="ui green label">
+		  <table border="0" cellpadding="0" cellspacing="0" style="margin:0;padding:0;width:100%;"><tr><td><i style="display:grid;" class="lock open icon"></i></td>
+		  <td style="text-align:right;"><span id="available">- STLX</span></td></tr></table></div>
+		  <div class="ui divider"></div>
+		  <div style="width:100%;" class="ui red label">
+		  <table border="0" cellpadding="0" cellspacing="0" style="margin:0;padding:0;width:100%;"><tr><td><i style="display:grid;" class="lock icon"></i></td>
+		  <td style="text-align:right;"><span id="locked">- STLX</span></td></tr></table></th>
+		  </thead>
+		  <tbody>
+		  <tr><td><a href="overview.html"><i class="list alternate icon"></i> Overview</a></td></tr>
+		  <tr><td><b><i class="paper plane icon"></i> Send</b></td></tr>
+		  <!--<tr><td><i class="history icon"></i> History</td></tr>-->
+			<tr><td><a href="staking.html"><i class="database icon"></i> Staking</a></td></tr>
+		  <tr><td><a href="help.html"><i class="help icon"></i> Help</a></td></tr>
+		  </tbody>
+		  </table>
+		  </div>
+		  <div class="twelve wide column">
+		  
+		  <div class="ui tiny action input" style="width:100%;"><input readonly type="text" id="address" ><button onclick="copytoclipboard();" class="ui teal right labeled icon button">
+			<i class="clone icon"></i>
+			Copy
+		  </button></div><br><br>
+			<div id="send">
+			 <div class="ui tiny input" style="width:100%;"><input type="text" id="dest" placeholder="Destination address..." ></div><br><br>
+			 <div class="ui tiny input" style="width:100%;"><input type="text" id="amount" placeholder="STLX amount"></div><br><br>
+			<div class="ui buttons">
+			  <button onclick="setbalance(25);" class="ui button">25%</button>
+			  <button onclick="setbalance(50);" class="ui button">50%</button>
+			  <button onclick="setbalance(75);" class="ui button">75%</button>
+			  <button onclick="setbalance(100);" class="ui red button">100%</button>
+			</div><br><br>
+			 <a href="#" id="sendbutton" onclick="send();" class="ui button disabled green">SEND</a>			
+			</div>
+		  
+		  </div>
+		</div>
+	</div>
+</body>
+</html>
