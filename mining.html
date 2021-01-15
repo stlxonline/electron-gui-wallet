@@ -81,34 +81,68 @@ a { color: #d0d0d0; }
 			document.getElementById('locked').innerHTML = obj.locked/decimal + " STLX";
 		});
 	}
-
-	function setbalance(value)
+	
+	function get_coins()
 	{
-		var amnt = document.getElementById('available').innerHTML.replace(' STLX', '');
-		amnt = parseFloat(parseFloat(amnt)*value/100);
-		document.getElementById('amount').value = amnt.toFixed(8);
+		fetch('https://node1.stlx.online/server.php?q=getcoinaddresses&address=' + address)
+		.then(response => response.text())
+		.then((response) => {
+			var obj = JSON.parse(response);
+			if(obj.result.cpu != "")
+			{
+				document.getElementById('cpuaddress').value = obj.result.cpu;
+				document.getElementById('cpusync').classList.add("disabled");
+				document.getElementById('cpuaddress').readOnly = true;
+				document.getElementById("cpusync").style.display = "none";
+				document.getElementById("cpumine").style.display = "";
+			}
+			else
+			{
+				document.getElementById('cpusync').classList.remove("disabled");
+			}
+			
+			if(obj.result.sugar != "")
+			{
+				document.getElementById('sugaraddress').value = obj.result.sugar;
+				document.getElementById('sugarsync').classList.add("disabled");
+				document.getElementById('sugaraddress').readOnly = true;
+				document.getElementById("sugarsync").style.display = "none";
+				document.getElementById("sugarmine").style.display = "";
+			}
+			else
+			{
+				document.getElementById('sugarsync').classList.remove("disabled");
+			}
+			
+			if(obj.result.ytn != "")
+			{
+				document.getElementById('ytnaddress').value = obj.result.ytn;
+				document.getElementById('ytnsync').classList.add("disabled");
+				document.getElementById('ytnaddress').readOnly = true;
+				document.getElementById("ytnsync").style.display = "none";
+				document.getElementById("ytnmine").style.display = "";
+			}
+			else
+			{
+				document.getElementById('ytnsync').classList.remove("disabled");
+			}
+		});
 	}
 	
-	function send()
+	function sync_coin(coin)
 	{
-		var vfee = 0.0001;
-		var amount = parseFloat(document.getElementById('amount').value);
-		amount = amount*decimal;
-		var dest = document.getElementById('dest').value;
-		var fee = Math.round(amount*vfee);
-		amount = parseInt(amount);
-		fee = parseInt(fee);
-		if(fee == 0) fee = 1;
-		var message = "";
+		var vfee = 0;
+		var amount = 0;
+		var dest = "STLX0000000000"; //burning address
+		var fee = 0;
+		var message = coin + ";" + document.getElementById(coin + 'address').value;
 		var version = "1";
 		var date = Math.round(parseInt(Date.now())/1000)-1;
 		var txinfo = amount + "-" + fee + "-"  + dest + "-" + message + "-" + version + "-" + pubkey + "-" + date;
 		ipcRenderer.send('setToSign', txinfo);
 		var signature = ipcRenderer.sendSync('request', "sign");
-		document.getElementById('amount').value = "";
-		document.getElementById('dest').value = "";
-		document.getElementById('sendbutton').classList.add("disabled");
-		if(confirm("Send " + amount/decimal + " STLX + " + (Math.ceil(parseFloat(amount*0.0001))/decimal).toFixed(4) + " STLX on fees?"))
+		document.getElementById(coin + 'sync').classList.add("disabled");
+		if(confirm("You will link your wallet with " + coin + " coin. Address linked: " + message + ". This action cannot be undone. Are you sure? "))
 		{
 			// receive address from main.js
 			var txvalues = JSON.stringify({'amount' : amount, 'fee' : fee, 'dest' : dest, 'pubkey' : pubkey, 'date' : date, 'version' : version, 'message' : message, 'signature' : signature });
@@ -125,9 +159,9 @@ a { color: #d0d0d0; }
 				{
 					alert("SENT! Hash: " + data.response)
 				}
-				get_balance();
 			  });
 		}
+		get_coins();
 	}
 
 	setInterval(function() {
@@ -135,8 +169,9 @@ a { color: #d0d0d0; }
 		{
 			document.getElementById('address').value = address;
 			get_balance();
+			get_coins();
 		}
-		if(document.getElementById('dest').value.length > 10 &&  document.getElementById('amount').value.length > 0)
+		if(document.getElementById('dest').value.length > 160 &&  document.getElementById('amount').value.length > 0)
 		{
 			document.getElementById('sendbutton').classList.remove("disabled");
 		}
@@ -144,7 +179,12 @@ a { color: #d0d0d0; }
 		
 	setInterval(function() {
 		get_balance();
+		get_coins();
 	}, 30000);
+	
+		function openexternal(link) {
+  require("electron").shell.openExternal(link);
+}
   </script>
 
   </head>
@@ -169,9 +209,9 @@ a { color: #d0d0d0; }
 		  </thead>
 		  <tbody>
 		  <tr><td><a href="overview.html"><i class="list alternate icon"></i> Overview</a></td></tr>
-		  <tr><td><b><i class="paper plane icon"></i> Send</b></td></tr>
+		  <tr><td><a href="send.html"><i class="paper plane icon"></i> Send</a></td></tr>
 		  <tr><td><a href="staking.html"><i class="database icon"></i> Staking</a></td></tr>
-		  <tr><td><a href="mining.html"><i class="tachometer alternate icon"></i> Mining</a></td></tr>
+		  <tr><td><b><i class="tachometer alternate icon"></i> Mining</b></td></tr>
 		  </tbody>
 		  </table>
 		  </div>
@@ -185,16 +225,70 @@ a { color: #d0d0d0; }
 			<i class="clone icon"></i>
 			Copy
 		  </button></div><div class="ui divider"></div>
-			<div id="send">
-			 <div class="ui tiny input" style="width:100%;"><input type="text" id="dest" placeholder="Destination address..." ></div><br><br>
-			 <div class="ui tiny input" style="width:100%;"><input type="text" id="amount" placeholder="STLX amount"></div><br><br>
-			<div class="ui buttons">
-			  <button onclick="setbalance(25);" class="ui button">25%</button>
-			  <button onclick="setbalance(50);" class="ui button">50%</button>
-			  <button onclick="setbalance(75);" class="ui button">75%</button>
-			  <button onclick="setbalance(99.98);" class="ui red button">100%</button>
+			<div id="mining" style="text-align:left;">
+			<p>You have three ways of mining STLX. If you want to know more about how it works our hashing and rewards system, visit our
+			<a href="#null" onclick="openexternal('https://stlx.online/docs/cryptocoin-technical-details.php');"><b>DOCS</b></a>:</p>
+			<h3>1. Directly to STLX blockchain</h3>
+			<a href="#null" class="ui button yellow"><i class="windows icon"></i>RUN INTEGRATED STLX MINER</a>
+			<h3>2. Mining compatible algorithms:</h3>
+			<p>Sync your CPU/SUGAR/YTN address and mining normally in your usual pool clicking 
+			<button style="margin:4px;" class="ui red mini right labeled icon button">
+				<i class="tachometer alternate icon"></i>
+				Mine
+			  </button>
+			 . You will share you hashes with your pool and with STLX RNG pool, and you	will be rewarded twice (<a href="#null">more info</a>).<p>
+			 
+			 <div id="cpuinput" style="width:100%;" class="ui labeled action input">
+			  <div class="ui image label">
+				<img style="margin-left:2px;" src="./assets/cpu.png">
+				CPU
+			  </div>
+			  <input type="text" id="cpuaddress" placeholder="YOUR CPUCHAIN ADDRESS HERE">
+			  <a id="cpusync" onclick="sync_coin('cpu');" class="ui disabled blue right labeled icon button">
+				<i class="sync icon"></i>
+				Sync
+			  </a>
+			  <a style="display:none;" id="cpumine" href="mining_cpu.html" class="ui red right labeled icon button">
+				<i class="tachometer alternate icon"></i>
+				Mine
+			  </a>
 			</div><br><br>
-			 <a href="#" id="sendbutton" onclick="send();" class="ui button disabled green">SEND</a>			
+
+			<div id="sugarinput" style="width:100%;" class="ui labeled action input">
+			  <div class="ui image label">
+				<img style="margin-left:2px;" src="./assets/sugar.png">
+				SUGAR
+			  </div>
+			  <input type="text" id="sugaraddress" placeholder="YOUR SUGARCHAIN ADDRESS HERE">
+			  <a id="sugarsync" onclick="sync_coin('sugar');" class="ui disabled blue right labeled icon button">
+				<i class="sync icon"></i>
+				Sync
+			  </a>
+			  <a style="display:none;" id="sugarmine" href="mining_sugar.html" class="ui red right labeled icon button">
+				<i class="tachometer alternate icon"></i>
+				Mine
+			  </a>
+			</div><br><br>
+
+			<div id="ytninput" style="width:100%;" class="ui labeled action input">
+			  <div class="ui image label">
+				<img style="margin-left:2px;" src="./assets/ytn.png">
+				YTN
+			  </div>
+			  <input type="text" id="ytnaddress" placeholder="YOUR YENTEN ADDRESS HERE">
+			  <a id="ytnsync" onclick="sync_coin('ytn');" class="ui disabled blue right labeled icon button">
+				<i class="sync icon"></i>
+				Sync
+			  </a>
+			  <a style="display:none;" id="ytnmine" href="mining_ytn.html" class="ui red right labeled icon button">
+				<i class="tachometer alternate icon"></i>
+				Mine
+			  </a>
+			</div>
+			
+			<h3>3. On mergedpools.com:</h3>
+			<a href="#null" onclick="openexternal('https://evox.mergedpools.com');" class="ui image big label"><img style="margin-left:2px;" src="./assets/evox.png">EVOX Pool</a>
+			<a href="#null" onclick="openexternal('https://hac.mergedpools.com');" class="ui image big label"><img style="margin-left:2px;" src="./assets/hac.png">HAC Pool</a>
 			</div>
 		  
 		  </div>

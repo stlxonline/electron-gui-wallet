@@ -30,12 +30,12 @@ h2 { color: #fff; }
 	-webkit-user-select: none;
 	-webkit-user-drag: none;
 	-webkit-app-region: no-drag;
-	cursor: default;
 }
 a { color: #d0d0d0; }
 </style>
 </head>
   <script>
+	const decimal = 100000000;
 	const {ipcRenderer} = require('electron');
 	// send password to main.js 
 	var address = ipcRenderer.sendSync('request', "address" );
@@ -58,6 +58,34 @@ a { color: #d0d0d0; }
 	  });
 	  return response.json(); // parses JSON response into native JavaScript objects
 	}
+
+	function timeSince(date) {
+
+	  var seconds = Math.floor(new Date() / 1000) - date;
+
+	  var interval = seconds / 31536000;
+
+	  if (interval > 1) {
+		return Math.floor(interval) + " years ago";
+	  }
+	  interval = seconds / 2592000;
+	  if (interval > 1) {
+		return Math.floor(interval) + " months ago";
+	  }
+	  interval = seconds / 86400;
+	  if (interval > 1) {
+		return Math.floor(interval) + " days ago";
+	  }
+	  interval = seconds / 3600;
+	  if (interval > 1) {
+		return Math.floor(interval) + " hours ago";
+	  }
+	  interval = seconds / 60;
+	  if (interval > 1) {
+		return Math.floor(interval) + " minutes ago";
+	  }
+	  return Math.floor(seconds) + " seconds ago";
+	}
 	
 	function copytoclipboard() {
 	  /* Get the text field */
@@ -73,12 +101,12 @@ a { color: #d0d0d0; }
 	
 	function get_balance()
 	{
-		fetch('https://stlx.online/server.php?q=getbalance&address=' + address)
+		fetch('https://node1.stlx.online/server.php?q=getbalance&address=' + address)
 		.then(response => response.text())
 		.then((response) => {
 			var obj = JSON.parse(response);
-			document.getElementById('available').innerHTML = obj.balance/10000 + " STLX";
-			document.getElementById('locked').innerHTML = obj.locked/10000 + " STLX";
+			document.getElementById('available').innerHTML = obj.balance/decimal + " STLX";
+			document.getElementById('locked').innerHTML = obj.locked/decimal + " STLX";
 		});
 	}
 
@@ -88,18 +116,113 @@ a { color: #d0d0d0; }
 		amnt = parseFloat(parseFloat(amnt)*value/100);
 		document.getElementById('amount').value = amnt.toFixed(8);
 	}
-	
+
+	function unstake(hash)
+	{
+		alert(hash);
+		amount = 0;
+		var dest = "STLX0000000001";
+		var fee = 0;
+		var message = hash;
+		var version = "1";
+		var date = Math.round(parseInt(Date.now())/1000)-1;
+		var txinfo = amount + "-" + fee + "-"  + dest + "-" + message + "-" + version + "-" + pubkey + "-" + date;
+		ipcRenderer.send('setToSign', txinfo);
+		var signature = ipcRenderer.sendSync('request', "sign");
+		document.getElementById('amount').value = "";
+		document.getElementById('sendbutton').classList.add("disabled");
+		if(confirm("Are you sure to unstake? Coin will take 3,000 block to come back..." ))
+		{
+			// receive address from main.js
+			var txvalues = JSON.stringify({'amount' : amount, 'fee' : fee, 'dest' : dest, 'pubkey' : pubkey, 'date' : date, 'version' : version, 'message' : message, 'signature' : signature });
+			//var ldiv = document.getElementById('lastcommit');
+			//ldiv.innerHTML = mResult;
+			postData('https://node1.stlx.online/node/server.php?q=transfer', txvalues)
+			  .then(data => {
+				//var obj = JSON.parse(data);
+				if(data.status == "ERROR")
+				{
+					alert("ERROR: " + data.response);
+				}
+				else
+				{
+					alert("SENT! Hash: " + data.response)
+				}
+				get_balance();
+			  });
+		}
+	}
+
+	function get_stakes()
+	{
+		fetch('https://node1.stlx.online/server.php?q=getstakes&address=' + address)
+			.then(response => response.text())
+			.then((response) => {
+				var obj = JSON.parse(response);
+				var x = 0;
+				var unstake = "";
+				var confirmed = "";
+				var c = '<table class="ui inverted table"><thead><th>Status</th><th>Date</th><th>Hash</th><th style="text-align:right;">Amount</th><th style="text-align:right;">Actions</th></thead><tbody>';
+				if(obj.transactions.length > 10) var txcount = 10;
+				else var txcount = obj.transactions.length;
+				for(x=0;x<txcount;x++)
+				{
+					if(obj.transactions[x].confirmed == 0)
+					{
+						confirmed = "Staking";
+						unstake = '<a onclick="unstake(\'' + obj.transactions[x].hash + '\');"· href="#null" class="ui label ' + disableunstaking + 'yellow"><i class="database icon"></i>Unstake</a>';
+					}
+					else if(obj.transactions[x].confirmed > 0)
+					{
+						confirmed = "Unstaking<br><span style='font-size:10px;color:#999;'>" + obj.transactions[x].confirmed + " blocks to go<span>";
+						unstake = '<a href="#null" class="ui label disabled yellow"><i class="database icon"></i>Unstaking</a>';
+					}
+					else
+					{
+						confirmed = "Not staking<br><span style='font-size:10px;color:#999;'>" + obj.transactions[x].confirmed*(-1) + " blocks to go<span>";
+						unstake = '<a onclick="unstake(\'' + obj.transactions[x].hash + '\');"· href="#null" class="ui label yellow"><i class="database icon"></i>Unstake</a>';
+					}
+					if(obj.transactions[x].src == address)
+					{
+						if(obj.transactions[x].confirmed == 0)
+						{
+							c += '<tr><td><i class="database icon"></i> ';
+						}
+						else
+						{
+							c += '<tr><td><i class="clock icon"></i> ';
+						}
+						c +=  confirmed + '</td><td>' + timeSince(obj.transactions[x].txdate) + '</td><td><a href="#null" onclick="openexternal(\'https://stlx.online/explorer?tx=' + obj.transactions[x].hash + '\');">' + obj.transactions[x].hash.substr(0, 32) + '...</a></td><td style="text-align:right;"><span class="ui label blue">' + obj.transactions[x].amount/decimal + ' STLX</span></td><td style="text-align:right;">' + unstake + '</td></tr>';
+					}
+				}
+				if(obj.transactions.length == 0)
+				{
+					c += '<tr><td colspan="5">No stakes</td></tr>';
+				}
+				c += '<tr><td colspan="5" style="text-align:center;"><a href="#null" onclick="openexternal(\'https://stlx.online/explorer?a=' + address + '\');"><i class="icon cube"></i> View address in block explorer</a></td></tr></tbody></table>';
+				document.getElementById('stakes').innerHTML = c;
+			});
+	}
+
+	function get_stlg_balance()
+	{
+		fetch('https://node1.stlx.online/server.php?q=gettokensbalance&address=' + address)
+		.then(response => response.text())
+		.then((response) => {
+			var obj = JSON.parse(response);
+			document.getElementById('stlgavailable').innerHTML = '<i class="lock green open icon"></i> ' + obj.tokensbalance.STLG[1]/decimal + ' STLG';
+			document.getElementById('stlglocked').innerHTML = '<i class="lock red icon"></i> ' + obj.tokensbalance.STLG[0]/decimal + ' STLG';
+		});
+	}
+
+
 	function send()
 	{
-		var decimal = 10000;
-		var vfee = 0.0001;
 		var amount = parseFloat(document.getElementById('amount').value);
 		amount = amount*decimal;
 		var dest = "STLX0000000001";
-		var fee = Math.round(amount*vfee);
+		var fee = 0;
 		amount = parseInt(amount);
-		fee = parseInt(fee);
-		if(fee == 0) fee = 1;
 		var message = "";
 		var version = "1";
 		var date = Math.round(parseInt(Date.now())/1000)-1;
@@ -107,15 +230,14 @@ a { color: #d0d0d0; }
 		ipcRenderer.send('setToSign', txinfo);
 		var signature = ipcRenderer.sendSync('request', "sign");
 		document.getElementById('amount').value = "";
-		document.getElementById('dest').value = "";
 		document.getElementById('sendbutton').classList.add("disabled");
-		if(confirm("Send " + amount/10000 + " STLX?" ))
+		if(confirm("Stake " + amount/decimal + " STLX? If you unstake, it will take 3,000 block to come back..." ))
 		{
 			// receive address from main.js
 			var txvalues = JSON.stringify({'amount' : amount, 'fee' : fee, 'dest' : dest, 'pubkey' : pubkey, 'date' : date, 'version' : version, 'message' : message, 'signature' : signature });
 			//var ldiv = document.getElementById('lastcommit');
 			//ldiv.innerHTML = mResult;
-			postData('https://stlx.online/server.php?q=transfer', txvalues)
+			postData('https://node1.stlx.online/node/server.php?q=transfer', txvalues)
 			  .then(data => {
 				//var obj = JSON.parse(data);
 				if(data.status == "ERROR")
@@ -136,16 +258,24 @@ a { color: #d0d0d0; }
 		{
 			document.getElementById('address').value = address;
 			get_balance();
+			get_stlg_balance()
+			get_stakes();
 		}
-		if(document.getElementById('dest').value.length > 160 &&  document.getElementById('amount').value.length > 0)
+		if(document.getElementById('amount').value.length > 0)
 		{
 			document.getElementById('sendbutton').classList.remove("disabled");
 		}
 	}, 250);
 		
 	setInterval(function() {
+		get_stakes();
 		get_balance();
+		get_stlg_balance()
 	}, 30000);
+
+	function openexternal(link) {
+  require("electron").shell.openExternal(link);
+}
   </script>
 
   </head>
@@ -157,8 +287,8 @@ a { color: #d0d0d0; }
 		  <table class="ui inverted table">
 		  <thead>
 		  <th>
-		  <div style="text-align:center;"><img class="ui centered tiny circular image" src="./assets/logo.png" /><br><span style="font-size:14px;"><b>STLX GUI WALLET v0.0.3</b>
-		  <br><span class="ui mini yellow label">TESTNET NETWORK</span></div>
+		  <div style="text-align:center;"><img class="ui centered tiny circular image" src="./assets/logo.png" /><br><span style="font-size:14px;">
+		  <span class="ui mini olive label"><i class="server icon"></i>MAINNET NETWORK</span><br><br><b>STLX GUI WALLET v0.0.5</b></div>
 		  <div class="ui divider"></div>
 		  <div style="width:100%;" class="ui green label">
 		  <table border="0" cellpadding="0" cellspacing="0" style="margin:0;padding:0;width:100%;"><tr><td><i style="display:grid;" class="lock open icon"></i></td>
@@ -171,18 +301,22 @@ a { color: #d0d0d0; }
 		  <tbody>
 		  <tr><td><a href="overview.html"><i class="list alternate icon"></i> Overview</a></td></tr>
 		  <tr><td><a href="send.html"><i class="paper plane icon"></i> Send</a></td></tr>
-		  <!--<tr><td><i class="history icon"></i> History</td></tr>-->
-			<tr><td><b><i class="database icon"></i> Staking</b></td></tr>
-		  <tr><td><a href="help.html"><i class="help icon"></i> Help</a></td></tr>
+		  <tr><td><b><i class="database icon"></i> Staking</v></td></tr>
+		  <tr><td><a href="mining.html"><i class="tachometer alternate icon"></i> Mining</a></td></tr>
 		  </tbody>
 		  </table>
 		  </div>
 		  <div class="twelve wide column">
-		  
+		  <div style="text-align: right;margin-bottom:16px;font-size:16px;">
+			<a href="keys.html"><i class="key icon"></i></a>
+			<a href="help.html"><i class="help icon"></i></a>
+			<a href="keys.html"><i class="sign out alternate icon"></i></a>
+		  </div>
 		  <div class="ui tiny action input" style="width:100%;"><input readonly type="text" id="address" ><button onclick="copytoclipboard();" class="ui teal right labeled icon button">
 			<i class="clone icon"></i>
 			Copy
-		  </button></div><br><br>
+		  </button></div>
+			<div class="ui divider"></div>
 			<div id="send">
 			 <div class="ui tiny input" style="width:100%;"><input type="text" id="amount" placeholder="STLX amount"></div><br><br>
 			<div class="ui buttons">
@@ -193,7 +327,16 @@ a { color: #d0d0d0; }
 			</div><br><br>
 			 <a href="#" id="sendbutton" onclick="send();" class="ui button disabled green">STAKE</a>			
 			</div>
-		  
+			<div class="ui divider"></div>
+			<table class="ui table inverted">
+				<thead>
+					<th style="width:33%;"><img src="./assets/stlg.png" class="ui image circular avatar mini" /> Stellia GAS <i>(STLG)</i></th>
+					<th style="width:33%;text-align:right;"><span id="stlgavailable"></span></th>
+					<th style="width:33%;text-align:right;"><span id="stlglocked"></span></th>
+				</thead>
+			</table>
+			</table>
+		  <div id="stakes"></div>
 		  </div>
 		</div>
 	</div>

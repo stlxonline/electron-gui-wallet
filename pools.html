@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset="utf-8" />
+    <title>STLX GUI Wallet</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.js" integrity="sha512-dqw6X88iGgZlTsONxZK9ePmJEFrmHwpuMrsUChjAw1mRUhUITE5QU9pkcSox+ynfLhL15Sv2al5A0LVyDCmtUw==" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.css" integrity="sha512-8bHTC73gkZ7rZ7vpqUQThUDhqcNFyYi2xgDgPDHc+GXVGHXq+xPjynxIopALmOPqzo9JZj0k6OqqewdGO3EsrQ==" crossorigin="anonymous" />
+<style>
+body {
+
+  margin: 0;
+  padding: 0;
+  color: #fff;
+  background:
+    -webkit-linear-gradient(315deg, hsla(287.91, 26.72%, 22.73%, 1) 0%, hsla(287.91, 26.72%, 22.73%, 0) 70%),
+    -webkit-linear-gradient(65deg, hsla(155.47, 31.16%, 32.41%, 1) 10%, hsla(155.47, 31.16%, 32.41%, 0) 80%),
+    -webkit-linear-gradient(135deg, hsla(270.2, 40.58%, 24.5%, 1) 15%, hsla(270.2, 40.58%, 24.5%, 0) 80%),
+    -webkit-linear-gradient(205deg, hsla(337.95, 42.36%, 22.49%, 1) 100%, hsla(337.95, 42.36%, 22.49%, 0) 70%);
+  background:
+    linear-gradient(135deg, hsla(287.91, 26.72%, 22.73%, 1) 0%, hsla(287.91, 26.72%, 22.73%, 0) 70%),
+    linear-gradient(25deg, hsla(155.47, 31.16%, 32.41%, 1) 10%, hsla(155.47, 31.16%, 32.41%, 0) 80%),
+    linear-gradient(315deg, hsla(270.2, 40.58%, 24.5%, 1) 15%, hsla(270.2, 40.58%, 24.5%, 0) 80%),
+    linear-gradient(245deg, hsla(337.95, 42.36%, 22.49%, 1) 100%, hsla(337.95, 42.36%, 22.49%, 0) 70%);
+  padding: 20px;
+  overflow-x: hidden;
+
+}
+h2 { color: #fff; }
+*, *::after, *::before {
+	-webkit-user-select: none;
+	-webkit-user-drag: none;
+	-webkit-app-region: no-drag;
+	cursor: default;
+}
+a { color: #d0d0d0; }
+</style>
+</head>
+  <script>
+	const {ipcRenderer} = require('electron');
+	var address = ipcRenderer.sendSync('request', "address" );
+
+	function copytoclipboard() {
+	  var copyText = document.getElementById("address");
+	  copyText.select();
+	  copyText.setSelectionRange(0, 99999);
+	  document.execCommand("copy");
+	  alert("Copied the text: " + copyText.value);
+	}
+	
+	function get_balance()
+	{
+		fetch('https://stlx.online/server.php?q=getbalance&address=' + address)
+		.then(response => response.text())
+		.then((response) => {
+			var obj = JSON.parse(response);
+			document.getElementById('available').innerHTML = obj.balance/10000 + " STLX";
+			document.getElementById('locked').innerHTML = obj.locked/10000 + " STLX";
+		});
+	}
+	get_balance();
+	setInterval(function() {
+		get_balance();
+	}, 30000);
+
+	function openexternal(link) {
+  require("electron").shell.openExternal(link);
+}
+  </script>
+
+  </head>
+  <body style="text-align:center;">
+    <div style="margin-top:12px;" class="ui container">
+	
+		<div class="ui grid">
+		  <div class="four wide column">
+		  <table class="ui inverted table">
+		  <thead>
+		  <th>
+		  <div style="text-align:center;"><img class="ui centered tiny circular image" src="./assets/logo.png" /><br><span style="font-size:14px;"><b>STLX GUI WALLET v0.0.3</b>
+		  <br><span class="ui mini yellow label">TESTNET NETWORK</span></div>
+		  <div class="ui divider"></div>
+		  <div style="width:100%;" class="ui green label">
+		  <table border="0" cellpadding="0" cellspacing="0" style="margin:0;padding:0;width:100%;"><tr><td><i style="display:grid;" class="lock open icon"></i></td>
+		  <td style="text-align:right;"><span id="available">- STLX</span></td></tr></table></div>
+		  <div class="ui divider"></div>
+		  <div style="width:100%;" class="ui red label">
+		  <table border="0" cellpadding="0" cellspacing="0" style="margin:0;padding:0;width:100%;"><tr><td><i style="display:grid;" class="lock icon"></i></td>
+		  <td style="text-align:right;"><span id="locked">- STLX</span></td></tr></table></th>
+		  </thead>
+		  <tbody>
+		  <tr><td><a href="overview.html"><i class="list alternate icon"></i> Overview</a></td></tr>
+		  <tr><td><a href="send.html"><i class="paper plane icon"></i> Send</a></td></tr>
+		  <tr><td><a href="staking.html"><i class="key icon"></i> Staking</a></td></tr>
+		  <tr><td><a href="mining.html"><i class="microchip icon"></i> Mining</a></td></tr>
+		  <tr><td><a href="pools.html"><i class="tachometer alternate icon"></i> Pools</a></td></tr>
+		  </tbody>
+		  </table>
+		  </div>
+		  <div class="twelve wide column">
+			<div id="help">
+			 <a href="#null" onclick="openexternal('https://discord.gg/DyNaYcZqVV');" style="font-size: 32px;margin:32px;"><i class="discord icon huge teal"></i></a>
+			  <a href="mailto:help@stlx.online" style="font-size: 32px;margin:32px;"><i class="mail icon huge teal"></i></a>
+			</div>
+		  
+		  </div>
+		</div>
+	</div>
+</body>
+</html>

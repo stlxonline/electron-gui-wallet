@@ -1,19 +1,28 @@
 const { app, BrowserWindow, ipcMain } = require('electron')
 const { generateKeyPairSync } = require('crypto');
+const { exec, spawn } = require('child_process');
 const fs = require('fs')
-const path = './stlx.wallet'
+const path = './wallets/stlx.wallet'
 const bs58 = require('bs58')
 global.addr = ""
 global.pbkey = ""
 global.balance = ""
 global.tobesigned = ""
+global.tobemined = ""
 global.pvkey = ""
+global.b58pvkey = ""
 
 // receive message from create.html 
 ipcMain.on('setToSign', (event, arg) => {
 	tobesigned = arg;
 	// send message to create.html
 	event.sender.send('setToSign-reply', "done");
+});
+
+ipcMain.on('setToMine', (event, arg) => {
+	tobemined = arg;
+	// send message to create.html
+	event.sender.send('setToMine-reply', "done");
 });
 
 // receive message from create.html 
@@ -69,6 +78,12 @@ ipcMain.on('index-send', (event, arg) => {
 	
 	var crypto = require('crypto');
 	var privateKey = fs.readFileSync(path)
+	var b58pvkey = privateKey
+	b64rpvkey = new Buffer.from(b58pvkey, 'base64')
+	console.log(b64rpvkey.toString() + "\n")
+	console.log(b64rpvkey)
+	b58pvkey = bs58.encode(b64rpvkey)
+	console.log(b58pvkey + "\n")
 	try
 	{
 		privateKey = crypto.createPrivateKey({
@@ -79,7 +94,6 @@ ipcMain.on('index-send', (event, arg) => {
 			'passphrase': arg
 		});
 		pvkey = privateKey
-		console.error(pvkey)
 	}
 	catch(error)
 	{
@@ -103,6 +117,7 @@ ipcMain.on('index-send', (event, arg) => {
 	pubkey64 = new Buffer.from(pubkey, 'base64')
 	var pubkey = bs58.encode(pubkey64)
 	pbkey = pubkey
+	//console.log(pbkey);
 	var address = pubkey
 	var i = 0;
 	var sha = "";
@@ -165,6 +180,12 @@ ipcMain.on('request', (event, arg) => {
 		console.log(sign)
 		event.returnValue = sign;
 	}
+	if(arg == "startmining")
+	{
+		console.log(tobemined);
+		exec('start ./assets/miner/cpuminer.exe ' + tobemined)
+		event.returnValue = "ok";
+	}
 	if(arg == "address")
 	{
 		//event.sender.send('reply-address', addr);
@@ -174,6 +195,10 @@ ipcMain.on('request', (event, arg) => {
 	{
 		//console.log(pbkey);
 		event.returnValue = pbkey;
+	}
+	if(arg == "privkey")
+	{
+		event.returnValue = b58pvkey;
 	}
 	/*if(arg == "startmining")
 	{

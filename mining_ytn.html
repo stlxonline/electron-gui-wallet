@@ -39,12 +39,17 @@ a { color: #d0d0d0; }
 	const {ipcRenderer} = require('electron');
 	// send password to main.js 
 	var address = ipcRenderer.sendSync('request', "address" );
-
+	var miningcommand = "";
+	
 	function copytoclipboard() {
+	  /* Get the text field */
 	  var copyText = document.getElementById("address");
+	  /* Select the text field */
 	  copyText.select();
-	  copyText.setSelectionRange(0, 99999);
+	  copyText.setSelectionRange(0, 99999); /* For mobile devices */
+	  /* Copy the text inside the text field */
 	  document.execCommand("copy");
+	  /* Alert the copied text */
 	  alert("Copied the text: " + copyText.value);
 	}
 	
@@ -58,24 +63,55 @@ a { color: #d0d0d0; }
 			document.getElementById('locked').innerHTML = obj.locked/decimal + " STLX";
 		});
 	}
+	
+	function get_coins()
+	{
+		fetch('https://node1.stlx.online/server.php?q=getcoinaddresses&address=' + address)
+		.then(response => response.text())
+		.then((response) => {
+			var obj = JSON.parse(response);
+			if(obj.result.ytn != "")
+			{
+				document.getElementById('ytnaddress').innerHTML = obj.result.ytn;
+				document.getElementById('ytnsync').classList.add("disabled");
+				document.getElementById("ytnsync").style.display = "none";
+				document.getElementById("ytnmine").style.display = "";
+			}
+			else
+			{
+				document.getElementById('ytnsync').classList.remove("disabled");
+			}
+		});
+	}
+
 
 	setInterval(function() {
 		if(document.getElementById('address').value != address)
 		{
 			document.getElementById('address').value = address;
-			get_transactions();
 			get_balance();
+			get_coins();
 		}
+		miningcommand = "-a yespowerR16 -o stratum+tcp://" + document.getElementById('pool').value + " -u " + document.getElementById('ytnaddress').innerHTML + " -t " + document.getElementById('threads').value + " " + document.getElementById('extraopts').value;
+		ipcRenderer.send('setToMine', miningcommand);
+		document.getElementById('mcommand').value = miningcommand;
 	}, 250);
-
-	get_balance();
+		
+	function startmining()
+	{
+		var mining = ipcRenderer.sendSync('request', "startmining");
+		return;
+	}
+		
 	setInterval(function() {
 		get_balance();
+		get_coins();
 	}, 30000);
 
-	function openexternal(link) {
-  require("electron").shell.openExternal(link);
-}
+
+		function openexplorer() {
+		  require("electron").shell.openExternal("https://explorer.ytnchain.org/address/" + document.getElementById('ytnaddress').innerHTML);
+		}
   </script>
 
   </head>
@@ -101,13 +137,13 @@ a { color: #d0d0d0; }
 		  <tbody>
 		  <tr><td><a href="overview.html"><i class="list alternate icon"></i> Overview</a></td></tr>
 		  <tr><td><a href="send.html"><i class="paper plane icon"></i> Send</a></td></tr>
-		  <tr><td><a href="staking.html"><i class="database icon"></i> Staking</a></td></tr>
-		  <tr><td><a href="mining.html"><i class="tachometer alternate icon"></i> Mining</a></td></tr>
+		  <tr><td><a href="staking.html"><i class="key icon"></i> Staking</a></td></tr>
+		  <tr><td><b><i class="tachometer alternate icon"></i> Mining</b></td></tr>
 		  </tbody>
 		  </table>
 		  </div>
 		  <div class="twelve wide column">
-			<div style="text-align: right;margin-bottom:16px;font-size:16px;">
+		  <div style="text-align: right;margin-bottom:16px;font-size:16px;">
 			<a href="keys.html"><i class="key icon"></i></a>
 			<a href="help.html"><i class="help icon"></i></a>
 			<a href="keys.html"><i class="sign out alternate icon"></i></a>
@@ -116,34 +152,69 @@ a { color: #d0d0d0; }
 			<i class="clone icon"></i>
 			Copy
 		  </button></div><br><br>
-			<div style="text-align:left;" id="help">
-			  <h3>STLX GUI WALLET v0.0.5</h3>
-			  <div class="ui divider"></div>
-			  <p>This wallet was created using <a href="#null" onclick="openexternal('https://nodejs.org');">node.js</a> and <a href="#null" onclick="openexternal('https://electronjs.org');">Electron</a>. 
-				You can find the source code on <a href="#null" onclick="openexternal('https://github.com/stlxonline/electron-gui-wallet');">Github</a>.</p>
-			  <p>Also, you can find source code of integrated miners here: <a href="#null" onclick="openexternal('https://github.com/stlxonline/cpuminer-opt-cpupower');">cpuminer-opt-cpupower</a>, <a href="#null" onclick="openexternal('https://github.com/stlxonline/python-stlx-miner');">python-stlx-miner</a>.</p>
-			  <p>Names, logos and brands from EVOX, HAC, CPU, SUGAR and YTN are property of the respective owners of this projects. The usage of this names, logos and brands
-				does not imply endorsement of any kind.</p>
-
-				<p>
-					<a href="#null" onclick="openexternal('https://cpuchain.org');" class="ui image label"><img style="margin-left:2px;" src="./assets/cpu.png">CPUCHAIN</a>
-					<a href="#null" onclick="openexternal('https://evolutionproject.space');" class="ui image label"><img style="margin-left:2px;" src="./assets/evox.png">EVOLUTION</a>
-					<a href="#null" onclick="openexternal('https://hacash.org');" class="ui image label"><img style="margin-left:2px;" src="./assets/hac.png">HACASH</a>
-					<a href="#null" onclick="openexternal('https://sugarchain.org');" class="ui image label"><img style="margin-left:2px;" src="./assets/sugar.png">SUGARCHAIN</a>
-					<a href="#null" onclick="openexternal('https://yentencoin.info');" class="ui image label"><img style="margin-left:2px;" src="./assets/ytn.png">YENTEN</a>
-
-				</p>
-
-
-			  <p>If you are the owner of one of this projects and don't interested on be "part" of our project, just send as an email and we will remove any trace of your product.</p>
-			  <p>If you need support, you can contact with us using next channels:</p>
-			</div><br><br>
-			<div>
-			 <a href="#null" onclick="openexternal('https://discord.gg/DyNaYcZqVV');" style="font-size: 16px;margin:32px;"><i class="discord icon huge teal"></i></a>
-			  <a href="mailto:help@stlx.online" style="font-size: 16px;margin:32px;"><i class="mail icon huge teal"></i></a>
-				<a href="#null" onclick="openexternal('https://stlx.online/docs');" style="font-size: 16px;margin:32px;"><i class="question circle icon huge teal"></i></a>
+			<div id="mining" style="text-align:left;">
+			<img class="ui image tiny centered circular" src="./assets/ytn.png" />
+			<div style="text-align:center"><h3><a href="#null" onclick="openexplorer();" id="ytnaddress"></a></h3></div><br><br>
+			<table style="width:100%">
+			<tr>
+			<td style="width:50%">
+			<p><b>SELECT YOUR MINING POOL:</b></p>
+			<select id="pool" style="width:100%;" class="ui search dropdown">
+			  <option value="cpu-pool.com:63368">cpu-pool.com</option>
+			  <option value="92.222.110.22:63368">yenten-pool.info</option>
+			  <option value="ytn-pool.com:63388">ytn-pool.com</option>
+			  <option value="matrix-pool.info:63010">matrix-pool.info</option>
+			  <option value="mining.cryptocurrency.com">cryptocurrency.com</option>
+			  <option value="eu.poolmine.xyz:4250">poolmine.xyz</option>
+			</select>
+			</td>
+			<td style="width:50%">
+			<p><b>SELECT NUMBER OF THREADS:</b></p>
+			<select id="threads" style="width:100%;" class="ui search dropdown">
+			  <option value="1">1 thread</option>
+			  <option value="2">2 threads</option>
+			  <option value="3">3 threads</option>
+			  <option value="4">4 threads</option>
+			  <option value="5">5 threads</option>
+			  <option value="6">6 threads</option>
+			  <option value="7">7 threads</option>
+			  <option value="8">8 threads</option>
+			  <option value="12">12 threads</option>
+			  <option value="16">16 threads</option>
+			  <option value="20">20 threads</option>
+			  <option value="24">24 threads</option>
+			  <option value="32">32 threads</option>
+			  <option value="64">64 threads</option>
+			  <option value="128">128 threads</option>
+			</select>
+			</td>
+			</tr>
+			<tr>
+			<td colspan="2">
+			<br>
+			<p><b>EXTRA OPTIONS (password, workerid, etc...). THIS IS OPTIONAL!</b></p>
+			<div style="width:100%;" class="ui input">
+				<input type="text" id="extraopts" placeholder="For example: -p password.workerID">
 			</div>
-		  
+			</td>
+			</tr>
+			<tr>
+			<td colspan="2">
+			<br>
+			<div style="width:100%;" class="ui right mini labeled input">
+			  <label for="mcommand" class="ui label">Mining command</label>
+			  <input type="text" readonly value="" id="mcommand">
+			</div>
+			</td>
+			</tr>
+			<tr>
+			<td colspan="2">
+			<br>
+			<div style="text-align:center"><a href="#null" onclick="startmining();" class="ui button green"><i class="tachometer alternate icon"></i>START MINING</a>
+			<a href="./mining.html" class="ui button red"><i class="left arrow icon"></i>BACK</a></div>
+			</td>
+			</tr>
+			</table>		  
 		  </div>
 		</div>
 	</div>

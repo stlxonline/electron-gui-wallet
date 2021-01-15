@@ -30,13 +30,13 @@ h2 { color: #fff; }
 	-webkit-user-select: none;
 	-webkit-user-drag: none;
 	-webkit-app-region: no-drag;
-	cursor: default;
 }
 
 a { color: #d0d0d0; }
 </style>
 </head>
   <script>
+	const decimal = 100000000;
 	const {ipcRenderer} = require('electron');
 	// send password to main.js 
 	var address = ipcRenderer.sendSync('request', "address" );
@@ -83,18 +83,18 @@ a { color: #d0d0d0; }
 	
 	function get_balance()
 	{
-		fetch('https://stlx.online/server.php?q=getbalance&address=' + address)
+		fetch('https://node1.stlx.online/server.php?q=getbalance&address=' + address)
 		.then(response => response.text())
 		.then((response) => {
 			var obj = JSON.parse(response);
-			document.getElementById('available').innerHTML = obj.balance/10000 + " STLX";
-			document.getElementById('locked').innerHTML = obj.locked/10000 + " STLX";
+			document.getElementById('available').innerHTML = obj.balance/decimal + " STLX";
+			document.getElementById('locked').innerHTML = obj.locked/decimal + " STLX";
 		});
 	}
 	
 	function get_transactions()
 	{
-		fetch('https://stlx.online/server.php?q=gettransactions&address=' + address)
+		fetch('https://node1.stlx.online/server.php?q=gettransactions&address=' + address)
 			.then(response => response.text())
 			.then((response) => {
 				var obj = JSON.parse(response);
@@ -119,7 +119,7 @@ a { color: #d0d0d0; }
 						{
 							c += '<tr><td><i class="cloud upload icon"></i> ';
 						}
-						c +=  confirmed + '</td><td>' + timeSince(obj.transactions[x].txdate) + '</td><td><a href="#null" onclick="openexternal(\'https://stlx.online/explorer?tx=' + obj.transactions[x].hash + '\');">' + obj.transactions[x].hash.substr(0, 32) + '...</a></td><td style="text-align:right;"><span class="ui label red">- ' + obj.transactions[x].fee/10000 + ' STLX</span></td></tr>';
+						c +=  confirmed + '</td><td>' + timeSince(obj.transactions[x].txdate) + '</td><td><a href="#null" onclick="openexternal(\'https://stlx.online/explorer?tx=' + obj.transactions[x].hash + '\');">' + obj.transactions[x].hash.substr(0, 32) + '...</a></td><td style="text-align:right;"><span class="ui label red">- ' + obj.transactions[x].fee/decimal + ' STLX</span></td></tr>';
 					}
 					else if(obj.transactions[x].src == address)
 					{
@@ -131,7 +131,7 @@ a { color: #d0d0d0; }
 						{
 							c += '<tr><td><i class="cloud upload icon"></i> ';
 						}
-						c +=  confirmed + '</td><td>' + timeSince(obj.transactions[x].txdate) + '</td><td><a href="#null" onclick="openexternal(\'https://stlx.online/explorer?tx=' + obj.transactions[x].hash + '\');">' + obj.transactions[x].hash.substr(0, 32) + '...</a></td><td style="text-align:right;"><span class="ui label red">- ' + (obj.transactions[x].amount+obj.transactions[x].fee)/10000 + ' STLX</span></td></tr>';
+						c +=  confirmed + '</td><td>' + timeSince(obj.transactions[x].txdate) + '</td><td><a href="#null" onclick="openexternal(\'https://stlx.online/explorer?tx=' + obj.transactions[x].hash + '\');">' + obj.transactions[x].hash.substr(0, 32) + '...</a></td><td style="text-align:right;"><span class="ui label red">- ' + (obj.transactions[x].amount+obj.transactions[x].fee)/decimal + ' STLX</span></td></tr>';
 					}
 					else if(obj.transactions[x].dest == address)
 					{
@@ -143,7 +143,7 @@ a { color: #d0d0d0; }
 						{
 							c += '<tr><td><i class="cloud download icon"></i> ';
 						}
-						c +=  confirmed + '</td><td>' + timeSince(obj.transactions[x].txdate) + '</td><td><a href="#null" onclick="openexternal(\'https://stlx.online/explorer?t=' + obj.transactions[x].hash + '\');">' + obj.transactions[x].hash.substr(0, 32) + '...</a></td><td style="text-align:right;"><span class="ui label green">+ ' + obj.transactions[x].amount/10000 + ' STLX</span></td></tr>';
+						c +=  confirmed + '</td><td>' + timeSince(obj.transactions[x].txdate) + '</td><td><a href="#null" onclick="openexternal(\'https://stlx.online/explorer?t=' + obj.transactions[x].hash + '\');">' + obj.transactions[x].hash.substr(0, 32) + '...</a></td><td style="text-align:right;"><span class="ui label green">+ ' + obj.transactions[x].amount/decimal + ' STLX</span></td></tr>';
 					}
 					
 				}
@@ -187,8 +187,8 @@ a { color: #d0d0d0; }
 		  <table class="ui inverted table">
 		  <thead>
 		  <th>
-		  <div style="text-align:center;"><img class="ui centered tiny circular image" src="./assets/logo.png" /><br><span style="font-size:14px;"><b>STLX GUI WALLET v0.0.3</b>
-		  <br><span class="ui mini yellow label">TESTNET NETWORK</span></div>
+		  <div style="text-align:center;"><img class="ui centered tiny circular image" src="./assets/logo.png" /><br><span style="font-size:14px;">
+		  <span class="ui mini olive label"><i class="server icon"></i>MAINNET NETWORK</span><br><br><b>STLX GUI WALLET v0.0.5</b></div>
 		  <div class="ui divider"></div>
 		  <div style="width:100%;" class="ui green label">
 		  <table border="0" cellpadding="0" cellspacing="0" style="margin:0;padding:0;width:100%;"><tr><td><i style="display:grid;" class="lock open icon"></i></td>
@@ -201,18 +201,22 @@ a { color: #d0d0d0; }
 		  <tbody>
 		  <tr><td><b><i class="list alternate icon"></i> Overview</b></td></tr>
 		  <tr><td><a href="send.html"><i class="paper plane icon"></i> Send</a></td></tr>
-		  <!--<tr><td><i class="history icon"></i> History</td></tr>-->
-		  <tr><td><a href="staking.html"><i class="key icon"></i> Staking</a></td></tr>
-		  <tr><td><a href="help.html"><i class="help icon"></i> Help</a></td></tr>
+		  <tr><td><a href="staking.html"><i class="database icon"></i> Staking</a></td></tr>
+		  <tr><td><a href="mining.html"><i class="tachometer alternate icon"></i> Mining</a></td></tr>
 		  </tbody>
 		  </table>
 		  </div>
 		  <div class="twelve wide column">
-		  
+		  <div style="text-align: right;margin-bottom:16px;font-size:16px;">
+			<a href="keys.html"><i class="key icon"></i></a>
+			<a href="help.html"><i class="help icon"></i></a>
+			<a href="keys.html"><i class="sign out alternate icon"></i></a>
+		  </div>
 		  <div class="ui tiny action input" style="width:100%;"><input readonly type="text" id="address" ><button onclick="copytoclipboard();" class="ui teal right labeled icon button">
 			<i class="clone icon"></i>
 			Copy
-		  </button></div><br><br>
+		  </button></div>
+		<div class="ui divider"></div>
 				<div id="transactions"></div>
 		  
 		  </div>
