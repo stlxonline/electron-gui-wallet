@@ -11,6 +11,7 @@ global.tobesigned = ""
 global.tobemined = ""
 global.pvkey = ""
 global.b58pvkey = ""
+global.rawallet = ""
 
 // receive message from create.html 
 ipcMain.on('setToSign', (event, arg) => {
@@ -67,7 +68,6 @@ ipcMain.on('create-send', (event, arg) => {
 		if(err) {
 			return console.log(err);
 		}
-		console.log("wallet saved!");
 	}); 
 	// send message to create.html
 	event.sender.send('create-reply', "created");
@@ -78,12 +78,10 @@ ipcMain.on('index-send', (event, arg) => {
 	
 	var crypto = require('crypto');
 	var privateKey = fs.readFileSync(path)
-	var b58pvkey = privateKey
+	b58pvkey = privateKey
+	rawallet = b58pvkey
 	b64rpvkey = new Buffer.from(b58pvkey, 'base64')
-	console.log(b64rpvkey.toString() + "\n")
-	console.log(b64rpvkey)
 	b58pvkey = bs58.encode(b64rpvkey)
-	console.log(b58pvkey + "\n")
 	try
 	{
 		privateKey = crypto.createPrivateKey({
@@ -177,41 +175,38 @@ ipcMain.on('request', (event, arg) => {
 		})
 		var bytes = Buffer.from(signature)
 		var sign = bs58.encode(bytes)
-		console.log(sign)
 		event.returnValue = sign;
 	}
 	if(arg == "startmining")
 	{
-		console.log(tobemined);
-		exec('start ./assets/miner/cpuminer.exe ' + tobemined)
+		exec('start ./miner/cpuminer.exe ' + tobemined)
+		event.returnValue = "ok";
+	}
+	if(arg == "starthashing")
+	{
+		exec('start ./stlxhasher/hasher.exe ' + addr)
 		event.returnValue = "ok";
 	}
 	if(arg == "address")
 	{
-		//event.sender.send('reply-address', addr);
 		event.returnValue = addr;
 	}
 	if(arg == "pubkey")
 	{
-		//console.log(pbkey);
 		event.returnValue = pbkey;
 	}
 	if(arg == "privkey")
 	{
 		event.returnValue = b58pvkey;
 	}
-	/*if(arg == "startmining")
+	if(arg == "rawallet")
 	{
-		const { Worker } = require('worker_threads');
-		const workerScriptFilePath = require.resolve('./miner.js'); 
-		const worker = new Worker(workerScriptFilePath);
-		worker.on('error', (error) => console.log(error));
-		worker.on('exit', (code) => {
-		  if (code !== 0)
-			throw new Error(`Worker stopped with exit code ${code}`);
-		});
-	}*/
-	
+		event.returnValue = rawallet;
+	}
+	if(arg == "exit")
+	{
+		app.quit();
+	}
 });
 
 

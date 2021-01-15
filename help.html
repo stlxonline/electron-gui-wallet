@@ -50,13 +50,19 @@ a { color: #d0d0d0; }
 	
 	function get_balance()
 	{
-		fetch('https://node1.stlx.online/server.php?q=getbalance&address=' + address)
+		fetch('https://node1.stlx.online/api/?q=getbalance&address=' + address)
 		.then(response => response.text())
 		.then((response) => {
 			var obj = JSON.parse(response);
 			document.getElementById('available').innerHTML = obj.balance/decimal + " STLX";
 			document.getElementById('locked').innerHTML = obj.locked/decimal + " STLX";
 		});
+	}
+
+	function quit()
+	{
+		var mining = ipcRenderer.sendSync('request', "exit");
+		return;
 	}
 
 	setInterval(function() {
@@ -110,7 +116,7 @@ a { color: #d0d0d0; }
 			<div style="text-align: right;margin-bottom:16px;font-size:16px;">
 			<a href="keys.html"><i class="key icon"></i></a>
 			<a href="help.html"><i class="help icon"></i></a>
-			<a href="keys.html"><i class="sign out alternate icon"></i></a>
+			<a href="#null" onclick="quit();"><i class="sign out alternate icon"></i></a>
 		  </div>
 		  <div class="ui tiny action input" style="width:100%;"><input readonly type="text" id="address" ><button onclick="copytoclipboard();" class="ui teal right labeled icon button">
 			<i class="clone icon"></i>

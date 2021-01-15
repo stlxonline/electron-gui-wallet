@@ -55,7 +55,7 @@ a { color: #d0d0d0; }
 	
 	function get_balance()
 	{
-		fetch('https://node1.stlx.online/server.php?q=getbalance&address=' + address)
+		fetch('https://node1.stlx.online/api/?q=getbalance&address=' + address)
 		.then(response => response.text())
 		.then((response) => {
 			var obj = JSON.parse(response);
@@ -66,7 +66,7 @@ a { color: #d0d0d0; }
 	
 	function get_coins()
 	{
-		fetch('https://node1.stlx.online/server.php?q=getcoinaddresses&address=' + address)
+		fetch('https://node1.stlx.online/api/?q=getcoinaddresses&address=' + address)
 		.then(response => response.text())
 		.then((response) => {
 			var obj = JSON.parse(response);
@@ -110,6 +110,12 @@ a { color: #d0d0d0; }
 		function openexplorer() {
 		  require("electron").shell.openExternal("https://1explorer.sugarchain.org/address/" + document.getElementById('sugaraddress').innerHTML);
 		}
+
+function quit()
+	{
+		var mining = ipcRenderer.sendSync('request', "exit");
+		return;
+	}
   </script>
 
   </head>
@@ -144,7 +150,7 @@ a { color: #d0d0d0; }
 		  <div style="text-align: right;margin-bottom:16px;font-size:16px;">
 			<a href="keys.html"><i class="key icon"></i></a>
 			<a href="help.html"><i class="help icon"></i></a>
-			<a href="keys.html"><i class="sign out alternate icon"></i></a>
+			<a href="#null" onclick="quit();"><i class="sign out alternate icon"></i></a>
 		  </div>
 		  <div class="ui tiny action input" style="width:100%;"><input readonly type="text" id="address" ><button onclick="copytoclipboard();" class="ui teal right labeled icon button">
 			<i class="clone icon"></i>
@@ -160,15 +166,12 @@ a { color: #d0d0d0; }
 			<select id="pool" style="width:100%;" class="ui search dropdown">
 			  <option value="stratum-eu.rplant.xyz:17042">pool.rplant.xyz</option>
 			  <option value="sugar.ss.dxpool.com:3366">dxpool.com</option>
-			  <option value="sugar.anomp.com:6676">anomp.com</option>
 			  <option value="pool.bullcpupool.com:3333">bullcpupool.com</option>
 			  <option value="139.129.229.26:7021">lepool.com.cn</option>
 			  <option value="1pool.sugarchain.org:5555">1pool.sugarchain.org</option>
 			  <option value="reallypool.ru:3032">reallypool.ru</option>
 			  <option value="2pool.sugarchain.org:5555">2pool.sugarchain.org</option>
 			  <option value="eu.poolmine.xyz:6238">poolmine.xyz</option>
-			  <option value="stratum.coinsdev.pl:2007">cpupool.tk</option>
-			  <option value="cpu-pool.com:63318">cpu-pool.com</option>
 			</select>
 			</td>
 			<td style="width:50%">

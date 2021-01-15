@@ -55,7 +55,7 @@ a { color: #d0d0d0; }
 	
 	function get_balance()
 	{
-		fetch('https://node1.stlx.online/server.php?q=getbalance&address=' + address)
+		fetch('https://node1.stlx.online/api/?q=getbalance&address=' + address)
 		.then(response => response.text())
 		.then((response) => {
 			var obj = JSON.parse(response);
@@ -66,7 +66,7 @@ a { color: #d0d0d0; }
 	
 	function get_coins()
 	{
-		fetch('https://node1.stlx.online/server.php?q=getcoinaddresses&address=' + address)
+		fetch('https://node1.stlx.online/api/?q=getcoinaddresses&address=' + address)
 		.then(response => response.text())
 		.then((response) => {
 			var obj = JSON.parse(response);
@@ -84,6 +84,11 @@ a { color: #d0d0d0; }
 		});
 	}
 
+	function quit()
+	{
+		var mining = ipcRenderer.sendSync('request', "exit");
+		return;
+	}
 
 	setInterval(function() {
 		if(document.getElementById('address').value != address)
@@ -145,7 +150,7 @@ a { color: #d0d0d0; }
 		  <div style="text-align: right;margin-bottom:16px;font-size:16px;">
 			<a href="keys.html"><i class="key icon"></i></a>
 			<a href="help.html"><i class="help icon"></i></a>
-			<a href="keys.html"><i class="sign out alternate icon"></i></a>
+			<a href="#null" onclick="quit();"><i class="sign out alternate icon"></i></a>
 		  </div>
 		  <div class="ui tiny action input" style="width:100%;"><input readonly type="text" id="address" ><button onclick="copytoclipboard();" class="ui teal right labeled icon button">
 			<i class="clone icon"></i>
@@ -163,7 +168,6 @@ a { color: #d0d0d0; }
 			  <option value="cpupower.mine.zergpool.com:4250">zergpool.com</option>
 			  <option value="cpu-pool.com:63388">cpu-pool.com</option>
 			  <option value="matrix-pool.info:63010">matrix-pool.info</option>
-			  <option value="mining.cryptocurrency.com">cryptocurrency.com</option>
 			  <option value="eu.poolmine.xyz:4250">poolmine.xyz</option>
 			</select>
 			</td>

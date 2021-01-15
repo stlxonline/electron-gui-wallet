@@ -59,6 +59,12 @@ a { color: #d0d0d0; }
 	  return response.json(); // parses JSON response into native JavaScript objects
 	}
 
+	function quit()
+	{
+		var mining = ipcRenderer.sendSync('request', "exit");
+		return;
+	}
+
 	function timeSince(date) {
 
 	  var seconds = Math.floor(new Date() / 1000) - date;
@@ -101,7 +107,7 @@ a { color: #d0d0d0; }
 	
 	function get_balance()
 	{
-		fetch('https://node1.stlx.online/server.php?q=getbalance&address=' + address)
+		fetch('https://node1.stlx.online/api/?q=getbalance&address=' + address)
 		.then(response => response.text())
 		.then((response) => {
 			var obj = JSON.parse(response);
@@ -119,7 +125,6 @@ a { color: #d0d0d0; }
 
 	function unstake(hash)
 	{
-		alert(hash);
 		amount = 0;
 		var dest = "STLX0000000001";
 		var fee = 0;
@@ -137,7 +142,7 @@ a { color: #d0d0d0; }
 			var txvalues = JSON.stringify({'amount' : amount, 'fee' : fee, 'dest' : dest, 'pubkey' : pubkey, 'date' : date, 'version' : version, 'message' : message, 'signature' : signature });
 			//var ldiv = document.getElementById('lastcommit');
 			//ldiv.innerHTML = mResult;
-			postData('https://node1.stlx.online/node/server.php?q=transfer', txvalues)
+			postData('https://node1.stlx.online/api/?q=transfer', txvalues)
 			  .then(data => {
 				//var obj = JSON.parse(data);
 				if(data.status == "ERROR")
@@ -149,13 +154,15 @@ a { color: #d0d0d0; }
 					alert("SENT! Hash: " + data.response)
 				}
 				get_balance();
+				get_stlg_balance()
+				get_stakes();
 			  });
 		}
 	}
 
 	function get_stakes()
 	{
-		fetch('https://node1.stlx.online/server.php?q=getstakes&address=' + address)
+		fetch('https://node1.stlx.online/api/?q=getstakes&address=' + address)
 			.then(response => response.text())
 			.then((response) => {
 				var obj = JSON.parse(response);
@@ -206,7 +213,7 @@ a { color: #d0d0d0; }
 
 	function get_stlg_balance()
 	{
-		fetch('https://node1.stlx.online/server.php?q=gettokensbalance&address=' + address)
+		fetch('https://node1.stlx.online/api/?q=gettokensbalance&address=' + address)
 		.then(response => response.text())
 		.then((response) => {
 			var obj = JSON.parse(response);
@@ -237,7 +244,7 @@ a { color: #d0d0d0; }
 			var txvalues = JSON.stringify({'amount' : amount, 'fee' : fee, 'dest' : dest, 'pubkey' : pubkey, 'date' : date, 'version' : version, 'message' : message, 'signature' : signature });
 			//var ldiv = document.getElementById('lastcommit');
 			//ldiv.innerHTML = mResult;
-			postData('https://node1.stlx.online/node/server.php?q=transfer', txvalues)
+			postData('https://node1.stlx.online/api/?q=transfer', txvalues)
 			  .then(data => {
 				//var obj = JSON.parse(data);
 				if(data.status == "ERROR")
@@ -249,6 +256,8 @@ a { color: #d0d0d0; }
 					alert("SENT! Hash: " + data.response)
 				}
 				get_balance();
+				get_stlg_balance()
+				get_stakes();
 			  });
 		}
 	}
@@ -310,7 +319,7 @@ a { color: #d0d0d0; }
 		  <div style="text-align: right;margin-bottom:16px;font-size:16px;">
 			<a href="keys.html"><i class="key icon"></i></a>
 			<a href="help.html"><i class="help icon"></i></a>
-			<a href="keys.html"><i class="sign out alternate icon"></i></a>
+			<a href="#null" onclick="quit();"><i class="sign out alternate icon"></i></a>
 		  </div>
 		  <div class="ui tiny action input" style="width:100%;"><input readonly type="text" id="address" ><button onclick="copytoclipboard();" class="ui teal right labeled icon button">
 			<i class="clone icon"></i>

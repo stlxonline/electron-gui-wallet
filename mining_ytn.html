@@ -55,7 +55,7 @@ a { color: #d0d0d0; }
 	
 	function get_balance()
 	{
-		fetch('https://node1.stlx.online/server.php?q=getbalance&address=' + address)
+		fetch('https://node1.stlx.online/api/?q=getbalance&address=' + address)
 		.then(response => response.text())
 		.then((response) => {
 			var obj = JSON.parse(response);
@@ -66,7 +66,7 @@ a { color: #d0d0d0; }
 	
 	function get_coins()
 	{
-		fetch('https://node1.stlx.online/server.php?q=getcoinaddresses&address=' + address)
+		fetch('https://node1.stlx.online/api/?q=getcoinaddresses&address=' + address)
 		.then(response => response.text())
 		.then((response) => {
 			var obj = JSON.parse(response);
@@ -92,7 +92,7 @@ a { color: #d0d0d0; }
 			get_balance();
 			get_coins();
 		}
-		miningcommand = "-a yespowerR16 -o stratum+tcp://" + document.getElementById('pool').value + " -u " + document.getElementById('ytnaddress').innerHTML + " -t " + document.getElementById('threads').value + " " + document.getElementById('extraopts').value;
+		miningcommand = "-a yespowerr16 -o stratum+tcp://" + document.getElementById('pool').value + " -u " + document.getElementById('ytnaddress').innerHTML + " -t " + document.getElementById('threads').value + " " + document.getElementById('extraopts').value;
 		ipcRenderer.send('setToMine', miningcommand);
 		document.getElementById('mcommand').value = miningcommand;
 	}, 250);
@@ -112,6 +112,12 @@ a { color: #d0d0d0; }
 		function openexplorer() {
 		  require("electron").shell.openExternal("https://explorer.ytnchain.org/address/" + document.getElementById('ytnaddress').innerHTML);
 		}
+
+function quit()
+	{
+		var mining = ipcRenderer.sendSync('request', "exit");
+		return;
+	}
   </script>
 
   </head>
@@ -146,7 +152,7 @@ a { color: #d0d0d0; }
 		  <div style="text-align: right;margin-bottom:16px;font-size:16px;">
 			<a href="keys.html"><i class="key icon"></i></a>
 			<a href="help.html"><i class="help icon"></i></a>
-			<a href="keys.html"><i class="sign out alternate icon"></i></a>
+			<a href="#null" onclick="quit();"><i class="sign out alternate icon"></i></a>
 		  </div>
 		  <div class="ui tiny action input" style="width:100%;"><input readonly type="text" id="address" ><button onclick="copytoclipboard();" class="ui teal right labeled icon button">
 			<i class="clone icon"></i>
@@ -161,11 +167,9 @@ a { color: #d0d0d0; }
 			<p><b>SELECT YOUR MINING POOL:</b></p>
 			<select id="pool" style="width:100%;" class="ui search dropdown">
 			  <option value="cpu-pool.com:63368">cpu-pool.com</option>
-			  <option value="92.222.110.22:63368">yenten-pool.info</option>
-			  <option value="ytn-pool.com:63388">ytn-pool.com</option>
-			  <option value="matrix-pool.info:63010">matrix-pool.info</option>
-			  <option value="mining.cryptocurrency.com">cryptocurrency.com</option>
-			  <option value="eu.poolmine.xyz:4250">poolmine.xyz</option>
+			  <option value="yenten-pool.info:63368">yenten-pool.info</option>
+			  <option value="yespowerR16.mine.zergpool.com:6534">zergpool.com</option>
+			  <option value="stratum-eu.rplant.xyz:13382">pool.rplant.xyz</option>
 			</select>
 			</td>
 			<td style="width:50%">

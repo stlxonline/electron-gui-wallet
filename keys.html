@@ -38,7 +38,9 @@ a { color: #d0d0d0; }
 	const decimal = 100000000;
 	const {ipcRenderer} = require('electron');
 	// send password to main.js 
-	var address = ipcRenderer.sendSync('request', "address" );
+	const address = ipcRenderer.sendSync('request', "address" );
+	const privkey = ipcRenderer.sendSync('request', "privkey" );
+	const rawallet = ipcRenderer.sendSync('request', "rawallet" );
 
 	function copytoclipboard() {
 	  var copyText = document.getElementById("address");
@@ -47,10 +49,18 @@ a { color: #d0d0d0; }
 	  document.execCommand("copy");
 	  alert("Copied the text: " + copyText.value);
 	}
+
+	function copytoclipboardkey() {
+	  var copyText = document.getElementById("privkey");
+	  copyText.select();
+	  copyText.setSelectionRange(0, 99999);
+	  document.execCommand("copy");
+	  alert("Copied the text: " + copyText.value);
+	}
 	
 	function get_balance()
 	{
-		fetch('https://node1.stlx.online/server.php?q=getbalance&address=' + address)
+		fetch('https://node1.stlx.online/api/?q=getbalance&address=' + address)
 		.then(response => response.text())
 		.then((response) => {
 			var obj = JSON.parse(response);
@@ -66,6 +76,10 @@ a { color: #d0d0d0; }
 			get_transactions();
 			get_balance();
 		}
+		if(document.getElementById('privkey').value != privkey)
+		{
+			document.getElementById('privkey').value = privkey;
+		}
 	}, 250);
 
 	get_balance();
@@ -74,8 +88,41 @@ a { color: #d0d0d0; }
 	}, 30000);
 
 	function openexternal(link) {
-  require("electron").shell.openExternal(link);
-}
+	  require("electron").shell.openExternal(link);
+	}
+
+	function savekeys() {
+	  var textToWrite = document.getElementById('privkey').value;
+	  var textFileAsBlob = new Blob([ textToWrite ], { type: 'text/plain' });
+	  var fileNameToSaveAs = "stlx-privkey.txt";
+	  var downloadLink = document.createElement("a");
+	  downloadLink.download = fileNameToSaveAs;
+	  downloadLink.innerHTML = "Download File";
+	  if (window.webkitURL != null) {
+		downloadLink.href = window.webkitURL.createObjectURL(textFileAsBlob);
+	  }
+	  downloadLink.click();
+	}
+
+	function quit()
+	{
+		var mining = ipcRenderer.sendSync('request', "exit");
+		return;
+	}
+
+	function exportwallet() {
+	  var textToWrite = rawallet;
+	  var textFileAsBlob = new Blob([ textToWrite ], { type: 'text/plain' });
+	  var fileNameToSaveAs = "stlx.wallet";
+	  var downloadLink = document.createElement("a");
+	  downloadLink.download = fileNameToSaveAs;
+	  downloadLink.innerHTML = "Download File";
+	  if (window.webkitURL != null) {
+		downloadLink.href = window.webkitURL.createObjectURL(textFileAsBlob);
+	  }
+	  downloadLink.click();
+	}
+
   </script>
 
   </head>
@@ -110,28 +157,22 @@ a { color: #d0d0d0; }
 			<div style="text-align: right;margin-bottom:16px;font-size:16px;">
 			<a href="keys.html"><i class="key icon"></i></a>
 			<a href="help.html"><i class="help icon"></i></a>
-			<a href="keys.html"><i class="sign out alternate icon"></i></a>
+			<a href="#null" onclick="quit();"><i class="sign out alternate icon"></i></a>
 		  </div>
 		  <div class="ui tiny action input" style="width:100%;"><input readonly type="text" id="address" ><button onclick="copytoclipboard();" class="ui teal right labeled icon button">
 			<i class="clone icon"></i>
 			Copy
 		  </button></div><br><br>
 			<div style="text-align:left;" id="help">
-			  <h3>STLX GUI WALLET v0.0.5</h3>
 			  <div class="ui divider"></div>
-			  <p>This wallet was created using <a href="#null" onclick="openexternal('https://nodejs.org');">node.js</a> and <a href="#null" onclick="openexternal('https://electronjs.org');">Electron</a>. 
-				You can find the source code on <a href="#null" onclick="openexternal('https://github.com/stlxonline/electron-gui-wallet');">Github</a>.</p>
-			  <p>Also, you can find source code of integrated miners here: <a href="#null" onclick="openexternal('https://github.com/stlxonline/cpuminer-opt-cpupower');">cpuminer-opt-cpupower</a>, <a href="#null" onclick="openexternal('https://github.com/stlxonline/python-stlx-miner');">python-stlx-miner</a>.</p>
-			  <p>Names, logos and brands from EVOX, HAC, CPU, SUGAR and YTN are property of the respective owners of this projects. The usage of this names, logos and brands
-				does not imply endorsement of any kind.</p>
-			  <p>If you are the owner of one of this projects and don't interested on be "part" of our project, just send as an email and we will remove any trace of your product</p>
-			  <p>If you need support, you cand contact with us using next channels:</p>
-			</div><br><br>
+			  <p><b>Private key:</b></p>
+			  <div class="ui form"><textarea readonly style="resize:none;height:350px;width:100%;-webkit-box-sizing: border-box;box-sizing: border-box;" id="privkey"></textarea></div>
+			</div><br>
 			<div>
-			 <a href="#null" onclick="openexternal('https://discord.gg/DyNaYcZqVV');" style="font-size: 16px;margin:32px;"><i class="discord icon huge teal"></i></a>
-			  <a href="mailto:help@stlx.online" style="font-size: 16px;margin:32px;"><i class="mail icon huge teal"></i></a>
-				<br><br><br>
-				<a href="overview.html" class="ui button yellow"><i class="left arrow icon"></i>GO BACK</a>
+			 <a href="#null" onclick="copytoclipboardkey();" class="ui blue button"><i class="clone icon"></i>Copy key</a>
+			 <a href="#null" onclick="savekeys();" class="ui green button"><i class="key icon"></i>Save key</a>
+			 <a href="#null" onclick="exportwallet();" class="ui yellow button"><i class="download icon"></i>Export wallet</a>
+			
 			</div>
 		  
 		  </div>
