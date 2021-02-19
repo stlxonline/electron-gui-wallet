@@ -40,6 +40,7 @@ a { color: #d0d0d0; }
 	// send password to main.js 
 	var address = ipcRenderer.sendSync('request', "address" );
 	var pubkey = ipcRenderer.sendSync('request', "pubkey" );
+	var votingaddress = "";
 	
 	async function postData(url = '', data = {}) {
 	  // Default options are marked with *
@@ -59,6 +60,19 @@ a { color: #d0d0d0; }
 	  return response.json(); // parses JSON response into native JavaScript objects
 	}
 	
+	function setbalance(value)
+	{
+		var amnt = document.getElementById('tokenbalance').innerHTML;
+		amnt = parseFloat(parseFloat(amnt)*value/100);
+		document.getElementById('amount').value = amnt.toFixed(8);
+	}
+	
+	function setvotingaddress(address)
+	{
+		votingaddress = address;
+		get_poll();
+	}
+	
 	function copytoclipboard() {
 	  /* Get the text field */
 	  var copyText = document.getElementById("address");
@@ -71,51 +85,30 @@ a { color: #d0d0d0; }
 	  alert("Copied the text: " + copyText.value);
 	}
 	
-	function get_balance()
-	{
-		fetch('https://node1.stlx.online/api/?q=getbalance&address=' + address)
-		.then(response => response.text())
-		.then((response) => {
-			var obj = JSON.parse(response);
-			document.getElementById('available').innerHTML = obj.balance/decimal + " STLX";
-			document.getElementById('locked').innerHTML = obj.locked/decimal + " STLX";
-		});
-	}
-
-	function setbalance(value)
-	{
-		var amnt = document.getElementById('available').innerHTML.replace(' STLX', '');
-		amnt = parseFloat(parseFloat(amnt)*value/100);
-		document.getElementById('amount').value = amnt.toFixed(8);
-	}
-	
 	function send()
 	{
-		var vfee = 0.0001;
 		var amount = parseFloat(document.getElementById('amount').value);
 		amount = amount*decimal;
-		var dest = document.getElementById('dest').value;
-		var fee = Math.round(amount*vfee);
+		var dest = votingaddress;
+		var fee = 10000;
+		var vfee = fee/decimal;
 		amount = parseInt(amount);
-		fee = parseInt(fee);
-		if(fee == 0) fee = 1;
 		var message = "";
 		var version = "4";
-		var token = "";
+		var token = "STLG";
 		var date = Math.round(parseInt(Date.now())/1000)-1;
 		var txinfo = amount + "-" + date + "-"  + dest + "-" + fee + "-" + message + "-" + pubkey + "-" + token + "-" + version;
 		ipcRenderer.send('setToSign', txinfo);
 		var signature = ipcRenderer.sendSync('request', "sign");
 		document.getElementById('amount').value = "";
-		document.getElementById('dest').value = "";
 		document.getElementById('sendbutton').classList.add("disabled");
-		if(confirm("Send " + amount/decimal + " STLX + " + (Math.ceil(parseFloat(amount*0.0001))/decimal).toFixed(4) + " STLX on fees?"))
+		if(confirm("Send " + amount/decimal + " " + token + " + " + vfee.toFixed(8) + " STLX on fees?"))
 		{
 			// receive address from main.js
 			var txvalues = JSON.stringify({'amount' : amount, 'fee' : fee, 'dest' : dest, 'pubkey' : pubkey, 'date' : date, 'version' : version, 'message' : message, 'signature' : signature, 'token' : token });
 			//var ldiv = document.getElementById('lastcommit');
 			//ldiv.innerHTML = mResult;
-			postData('https://node1.stlx.online/api/?q=transfer', txvalues)
+			postData('https://node1.stlx.online/api/?q=transfer&symbol=' + token, txvalues)
 			  .then(data => {
 				//var obj = JSON.parse(data);
 				if(data.status == "ERROR")
@@ -130,28 +123,88 @@ a { color: #d0d0d0; }
 			  });
 		}
 	}
-
-	setInterval(function() {
-		if(document.getElementById('address').value != address)
-		{
-			document.getElementById('address').value = address;
-			get_balance();
-		}
-		if(document.getElementById('dest').value.length > 10 &&  document.getElementById('amount').value.length > 0)
-		{
-			document.getElementById('sendbutton').classList.remove("disabled");
-		}
-	}, 250);
+	
+	function get_balance()
+	{
+		fetch('https://node1.stlx.online/api/?q=getbalance&address=' + address)
+		.then(response => response.text())
+		.then((response) => {
+			var obj = JSON.parse(response);
+			document.getElementById('available').innerHTML = obj.balance/decimal + " STLX";
+			document.getElementById('locked').innerHTML = obj.locked/decimal + " STLX";
+		});
+	}
+	
+	function get_token_balance()
+	{
+		fetch('https://node1.stlx.online/api/?q=gettokensbalance&address=' + address)
+		.then(response => response.text())
+		.then((response) => {
+			var obj = JSON.parse(response);
+			for (const [key, value] of Object.entries(obj.tokensbalance)) {
+			  if(key == "STLG")
+			  document.getElementById('tokenbalance').innerHTML = value[1]/decimal;
+			}
+		});
+	}
+	
+	function get_poll()
+	{
+		fetch('https://node1.stlx.online/api/?q=polls')
+		.then(response => response.text())
+		.then((response) => {
+			var obj = JSON.parse(response);
+			var c = '<table class="ui tiny inverted table">';
+			if(obj.status == "OK")
+			{
+				var optl = obj.options.length;
+				for(var x=0;x<optl;x++)
+				{
+					if(obj.options[x][0] == votingaddress)
+					{
+						c = c + '<tr><td style="width:20%;text-align:center;"><a href="#null" class="ui mini button green" id="vote' + x + '">SELECT</a><br><br>' + obj.options[x][3] + ' votes</td>';
+					}
+					else
+					{
+						c = c + '<tr><td style="width:20%;text-align:center;"><a onclick="setvotingaddress(\'' + obj.options[x][0] + '\');" href="#null" class="ui mini button red" id="vote' + x + '">SELECT</a><br><br>' + obj.options[x][3] + ' votes</td>';
+					}
+					c = c + '<td style="width:90%;text-align:left;"><b>' + obj.options[x][1] + ': </b><br>' + obj.options[x][2] + '</td></tr>';
+				}
+				document.getElementById('voptions').innerHTML = c;
+				document.getElementById('vquery').innerHTML = "<h4>" + obj.query + "</h4>";
+			}
+		});
+	}
 
 	function quit()
 	{
 		var mining = ipcRenderer.sendSync('request', "exit");
 		return;
 	}
+
+	setInterval(function() {
+		if(document.getElementById('address').value != address)
+		{
+			document.getElementById('address').value = address;
+			get_balance();
+			get_token_balance();
+			get_poll();
+		}
+		if(votingaddress.length == 14 &&  parseFloat(document.getElementById('amount').value) > 0)
+		{
+			document.getElementById('sendbutton').classList.remove("disabled");
+		}
+		else
+		{
+			document.getElementById('sendbutton').classList.add("disabled");
+		}
+	}, 250);
 		
 	setInterval(function() {
 		get_balance();
+		get_token_balance()
 	}, 30000);
+
   </script>
 
   </head>
@@ -177,10 +230,10 @@ a { color: #d0d0d0; }
 		  <tbody>
 		  <tr><td><a href="overview.html"><i class="list alternate icon"></i> Overview</a></td></tr>
 		  <tr><td><a href="transactions.html"><i class="envelope icon"></i> Transactions</a></td></tr>
-		  <tr><td><b><i class="paper plane icon"></i> Send</b></td></tr>
+		  <tr><td><a href="send.html"><i class="paper plane icon"></i> Send</a></td></tr>
 		  <tr><td><a href="staking.html"><i class="database icon"></i> Staking</a></td></tr>
 		  <tr><td><a href="mining.html"><i class="tachometer alternate icon"></i> Mining</a></td></tr>
-		  <tr><td><a href="community.html"><i class="user icon"></i> Community</a></td></tr>
+		  <tr><td><b><i class="user icon"></i> Community</b></td></tr>
 		  </tbody>
 		  </table>
 		  </div>
@@ -194,19 +247,32 @@ a { color: #d0d0d0; }
 			<i class="clone icon"></i>
 			Copy
 		  </button></div><div class="ui divider"></div>
-			<div id="send">
-			 <div class="ui tiny input" style="width:100%;"><input type="text" id="dest" placeholder="Destination address..." ></div><br><br>
-			 <div class="ui tiny input" style="width:100%;"><input type="text" id="amount" placeholder="STLX amount"></div><br><br>
-			<div class="ui buttons">
-			  <button onclick="setbalance(25);" class="ui button">25%</button>
-			  <button onclick="setbalance(50);" class="ui button">50%</button>
-			  <button onclick="setbalance(75);" class="ui button">75%</button>
-			  <button onclick="setbalance(99.99);" class="ui red button">100%</button>
-			</div><br><br>
-			 <a href="#" id="sendbutton" onclick="send();" class="ui button disabled green">SEND</a>			
+			<div style="text-align:left;" id="vquery"></div>
+			<div class="ui divider"></div>
+			<div style="text-align:left;" id="voptions"></div>
+			<div class="ui divider"></div>
+			<div style="text-align:left">
+			
+			<h4 style="margin:8px 0px 8px 0px;padding:8px;border-radius: 6px;background:#333;opacity:0.9;" >
+			
+			<b>
+				<i class="lock green open icon"></i>
+				<span style="margin-right:8px;">VOTING POWER:</span> 
+				<span id="tokenbalance"></span> STLG
+			</b>
+			<br><br>
+			<div class="ui mini action input" style="width:100%;">
+			 <input type="text" id="amount" placeholder="Token amount...">
+			 <button onclick="setbalance(25);" class="ui mini button">25%</button>
+			  <button onclick="setbalance(50);" class="ui mini button">50%</button>
+			  <button onclick="setbalance(75);" class="ui mini button">75%</button>
+			  <button onclick="setbalance(100);" class="ui mini red button">100%</button>
+			 </div><br><br>
+			 <div style="text-align:center;"><a href="#" id="sendbutton" onclick="send();" class="ui mini button disabled green">VOTE</a></div>
+			</h4>
 			</div>
-		  
-		  </div>
+
+			 
 		</div>
 	</div>
 </body>
