@@ -100,9 +100,10 @@ a { color: #d0d0d0; }
 		fee = parseInt(fee);
 		if(fee == 0) fee = 1;
 		var message = "";
-		var version = "1";
+		var version = "4";
+		var token = "";
 		var date = Math.round(parseInt(Date.now())/1000)-1;
-		var txinfo = amount + "-" + fee + "-"  + dest + "-" + message + "-" + version + "-" + pubkey + "-" + date;
+		var txinfo = amount + "-" + date + "-"  + dest + "-" + fee + "-" + message + "-" + pubkey + "-" + token + "-" + version;
 		ipcRenderer.send('setToSign', txinfo);
 		var signature = ipcRenderer.sendSync('request', "sign");
 		document.getElementById('amount').value = "";
@@ -111,7 +112,7 @@ a { color: #d0d0d0; }
 		if(confirm("Send " + amount/decimal + " STLX + " + (Math.ceil(parseFloat(amount*0.0001))/decimal).toFixed(4) + " STLX on fees?"))
 		{
 			// receive address from main.js
-			var txvalues = JSON.stringify({'amount' : amount, 'fee' : fee, 'dest' : dest, 'pubkey' : pubkey, 'date' : date, 'version' : version, 'message' : message, 'signature' : signature });
+			var txvalues = JSON.stringify({'amount' : amount, 'fee' : fee, 'dest' : dest, 'pubkey' : pubkey, 'date' : date, 'version' : version, 'message' : message, 'signature' : signature, 'token' : token });
 			//var ldiv = document.getElementById('lastcommit');
 			//ldiv.innerHTML = mResult;
 			postData('https://node1.stlx.online/api/?q=transfer', txvalues)
@@ -163,7 +164,7 @@ a { color: #d0d0d0; }
 		  <thead>
 		  <th>
 		  <div style="text-align:center;"><img class="ui centered tiny circular image" src="./assets/logo.png" /><br><span style="font-size:14px;">
-		  <span class="ui mini olive label"><i class="server icon"></i>MAINNET NETWORK</span><br><br><b>STLX GUI WALLET v0.0.5</b></div>
+		  <span class="ui mini olive label"><i class="server icon"></i>MAINNET NETWORK</span><br><br><b>STLX GUI WALLET v0.0.6</b></div>
 		  <div class="ui divider"></div>
 		  <div style="width:100%;" class="ui green label">
 		  <table border="0" cellpadding="0" cellspacing="0" style="margin:0;padding:0;width:100%;"><tr><td><i style="display:grid;" class="lock open icon"></i></td>
@@ -175,6 +176,7 @@ a { color: #d0d0d0; }
 		  </thead>
 		  <tbody>
 		  <tr><td><a href="overview.html"><i class="list alternate icon"></i> Overview</a></td></tr>
+		  <tr><td><a href="transactions.html"><i class="envelope icon"></i> Transactions</a></td></tr>
 		  <tr><td><b><i class="paper plane icon"></i> Send</b></td></tr>
 		  <tr><td><a href="staking.html"><i class="database icon"></i> Staking</a></td></tr>
 		  <tr><td><a href="mining.html"><i class="tachometer alternate icon"></i> Mining</a></td></tr>
@@ -198,7 +200,7 @@ a { color: #d0d0d0; }
 			  <button onclick="setbalance(25);" class="ui button">25%</button>
 			  <button onclick="setbalance(50);" class="ui button">50%</button>
 			  <button onclick="setbalance(75);" class="ui button">75%</button>
-			  <button onclick="setbalance(99.98);" class="ui red button">100%</button>
+			  <button onclick="setbalance(99.99);" class="ui red button">100%</button>
 			</div><br><br>
 			 <a href="#" id="sendbutton" onclick="send();" class="ui button disabled green">SEND</a>			
 			</div>

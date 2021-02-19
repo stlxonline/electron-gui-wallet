@@ -94,65 +94,31 @@ a { color: #d0d0d0; }
 	
 	function get_transactions()
 	{
-		fetch('https://node1.stlx.online/api/?q=gettransactions&address=' + address)
+		fetch('https://node1.stlx.online/api/?q=gettokensbalance&address=' + address)
 			.then(response => response.text())
 			.then((response) => {
 				var obj = JSON.parse(response);
 				var x = 0;
 				var confirmed = "";
-				var c = '<table class="ui inverted table"><thead><th>Status</th><th>Date</th><th>Hash</th><th style="text-align:right;">Amount</th></thead><tbody>';
-				if(obj.transactions.length > 10) var txcount = 10;
-				else var txcount = obj.transactions.length;
-				for(x=0;x<txcount;x++)
+				var c = '<table class="ui inverted table"><thead><th>Token name</th><th>Ticker</th><th style="text-align:right;">Available</th><th style="text-align:right;">Locked</th></thead><tbody>';
+				/*var tokenscount = obj.tokensbalance.length;
+				for(x=0;x<tokenscount;x++)
 				{
-					if(obj.transactions[x].confirmed == 1) confirmed = "Confirmed";
-					else if(obj.transactions[x].confirmed == -1) confirmed = "In mempool";
-					else confirmed = "Unconfirmed";
+					c += '<tr><td>1</td>';
+					c += '<tr><td>2</td>';
+					c += '<tr><td>3</td>';
+					c += '<tr><td>4</td>';
 					
-					if(obj.transactions[x].src == obj.transactions[x].dest)
-					{
-						if(obj.transactions[x].confirmed == -1)
-						{
-							c += '<tr><td><i class="paper plane icon"></i> ';
-						}
-						else
-						{
-							c += '<tr><td><i class="cloud upload icon"></i> ';
-						}
-						c +=  confirmed + '</td><td>' + timeSince(obj.transactions[x].txdate) + '</td><td><a href="#null" onclick="openexternal(\'https://stlx.online/explorer?tx=' + obj.transactions[x].hash + '\');">' + obj.transactions[x].hash.substr(0, 32) + '...</a></td><td style="text-align:right;"><span class="ui label red">- ' + obj.transactions[x].fee/decimal + ' STLX</span></td></tr>';
-					}
-					else if(obj.transactions[x].src == address)
-					{
-						if(obj.transactions[x].confirmed == -1)
-						{
-							c += '<tr><td><i class="paper plane icon"></i> ';
-						}
-						else
-						{
-							c += '<tr><td><i class="cloud upload icon"></i> ';
-						}
-						c +=  confirmed + '</td><td>' + timeSince(obj.transactions[x].txdate) + '</td><td><a href="#null" onclick="openexternal(\'https://stlx.online/explorer?tx=' + obj.transactions[x].hash + '\');">' + obj.transactions[x].hash.substr(0, 32) + '...</a></td><td style="text-align:right;"><span class="ui label red">- ' + (obj.transactions[x].amount+obj.transactions[x].fee)/decimal + ' STLX</span></td></tr>';
-					}
-					else if(obj.transactions[x].dest == address)
-					{
-						if(obj.transactions[x].confirmed == -1)
-						{
-							c += '<tr><td><i class="paper plane icon"></i> ';
-						}
-						else
-						{
-							c += '<tr><td><i class="cloud download icon"></i> ';
-						}
-						c +=  confirmed + '</td><td>' + timeSince(obj.transactions[x].txdate) + '</td><td><a href="#null" onclick="openexternal(\'https://stlx.online/explorer?t=' + obj.transactions[x].hash + '\');">' + obj.transactions[x].hash.substr(0, 32) + '...</a></td><td style="text-align:right;"><span class="ui label green">+ ' + obj.transactions[x].amount/decimal + ' STLX</span></td></tr>';
-					}
-					
-				}
-				if(obj.transactions.length == 0)
-				{
-					c += '<tr><td colspan="5">No transactions</td></tr>';
-				}
-				c += '<tr><td colspan="4" style="text-align:center;"><a href="#null" onclick="openexternal(\'https://stlx.online/explorer?a=' + address + '\');"><i class="icon cube"></i> View address in block explorer</a></td></tr></tbody></table>';
-				document.getElementById('transactions').innerHTML = c;
+				}*/
+				c += '<tr><td><a href="token.html?token=EAT"><img src="assets/eat.png" class="ui mini avatar image circular" > <b>Exchaltge Token</b></a></td>';
+				c += '<td>EAT</td>';
+				c += '<td style="text-align:right;">' + obj.tokensbalance.EAT[1]/100000000 + ' EAT</td>';
+				c += '<td style="text-align:right;">' + obj.tokensbalance.EAT[0]/100000000 + ' EAT</td></tr></a>';
+				c += '<tr><td><a href="token.html?token=STLG"><img src="assets/stlg.png" class="ui mini avatar image circular" > <b>Stellia GAS</b></a></td>';
+				c += '<td>STLG</td>';
+				c += '<td style="text-align:right;">' + obj.tokensbalance.STLG[1]/100000000 + ' STLG</td>';
+				c += '<td style="text-align:right;">' + obj.tokensbalance.STLG[0]/100000000 + ' STLG</td></tr></a>';
+				document.getElementById('tokens').innerHTML = c;
 			});
 	}
 
@@ -192,7 +158,7 @@ a { color: #d0d0d0; }
 		  <thead>
 		  <th>
 		  <div style="text-align:center;"><img class="ui centered tiny circular image" src="./assets/logo.png" /><br><span style="font-size:14px;">
-		  <span class="ui mini olive label"><i class="server icon"></i>MAINNET NETWORK</span><br><br><b>STLX GUI WALLET v0.0.5</b></div>
+		  <span class="ui mini olive label"><i class="server icon"></i>MAINNET NETWORK</span><br><br><b>STLX GUI WALLET v0.0.6</b></div>
 		  <div class="ui divider"></div>
 		  <div style="width:100%;" class="ui green label">
 		  <table border="0" cellpadding="0" cellspacing="0" style="margin:0;padding:0;width:100%;"><tr><td><i style="display:grid;" class="lock open icon"></i></td>
@@ -204,6 +170,7 @@ a { color: #d0d0d0; }
 		  </thead>
 		  <tbody>
 		  <tr><td><b><i class="list alternate icon"></i> Overview</b></td></tr>
+		  <tr><td><a href="transactions.html"><i class="envelope icon"></i> Transactions</a></td></tr>
 		  <tr><td><a href="send.html"><i class="paper plane icon"></i> Send</a></td></tr>
 		  <tr><td><a href="staking.html"><i class="database icon"></i> Staking</a></td></tr>
 		  <tr><td><a href="mining.html"><i class="tachometer alternate icon"></i> Mining</a></td></tr>
@@ -221,7 +188,7 @@ a { color: #d0d0d0; }
 			Copy
 		  </button></div>
 		<div class="ui divider"></div>
-				<div id="transactions"></div>
+				<div id="tokens"></div>
 		  
 		  </div>
 		</div>

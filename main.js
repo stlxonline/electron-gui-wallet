@@ -134,6 +134,63 @@ ipcMain.on('index-send', (event, arg) => {
 });
 
 // receive message from create.html 
+ipcMain.on('key-send', (event, arg) => {
+	
+	var crypto = require('crypto');
+	var pvkeybytes = bs58.decode(arg)
+	var privateKey = pvkeybytes.toString()
+	try
+	{
+		privateKey = crypto.createPrivateKey({
+			'key': "-----BEGIN ENCRYPTED PRIVATE KEY-----\n" + privateKey + "\n-----END ENCRYPTED PRIVATE KEY-----",
+			'format': 'pem',
+			'type': 'pkcs8',
+			'cipher': 'aes-256-cbc',
+			'passphrase': arg
+		});
+		pvkey = privateKey
+	}
+	catch(error)
+	{
+		console.log(error)
+		event.sender.send('key-reply', "bad_decrypt");
+	}
+	
+	var pubKeyObject = crypto.createPublicKey({
+		key: privateKey,
+		format: 'pem'
+	})
+
+	var publicKey = pubKeyObject.export({
+		format: 'pem',
+		type: 'spki'
+	})
+	
+	var pubkey = publicKey.toString().replace("-----BEGIN PUBLIC KEY-----", "");
+	pubkey = pubkey.replace("-----END PUBLIC KEY-----", "");
+	pubkey = pubkey.replace(/\n/g, '')
+	pubkey64 = new Buffer.from(pubkey, 'base64')
+	var pubkey = bs58.encode(pubkey64)
+	pbkey = pubkey
+	//console.log(pbkey);
+	var address = pubkey
+	var i = 0;
+	var sha = "";
+	for(i=0;i<9;i++)
+	{
+		sha = crypto.createHash('sha512').update(address);
+		address = sha.digest();
+	}
+	sha = crypto.createHash('sha512').update(address);
+	address = sha.digest('hex');
+	var bytes = Buffer.from(address)
+	address = "STLX" + bs58.encode(bytes)
+	addr = address
+	// send message to create.html
+	event.sender.send('key-reply', "opened");
+});
+
+// receive message from create.html 
 ipcMain.on('transfer', (event, arg) => {
 		const https = require('https')
 		

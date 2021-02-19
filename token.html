@@ -39,7 +39,10 @@ a { color: #d0d0d0; }
 	const {ipcRenderer} = require('electron');
 	// send password to main.js 
 	var address = ipcRenderer.sendSync('request', "address" );
-	var miningcommand = "";
+	var pubkey = ipcRenderer.sendSync('request', "pubkey" );
+	
+	var queryDict = {};
+	location.search.substr(1).split("&").forEach(function(item) {queryDict[item.split("=")[0]] = item.split("=")[1]});
 	
 	function copytoclipboard() {
 	  /* Get the text field */
@@ -53,6 +56,48 @@ a { color: #d0d0d0; }
 	  alert("Copied the text: " + copyText.value);
 	}
 	
+	function send()
+	{
+		var vfee = 0.0001;
+		var amount = parseFloat(document.getElementById('amount').value);
+		amount = amount*decimal;
+		var dest = document.getElementById('dest').value;
+		var fee = Math.round(amount*vfee);
+		amount = parseInt(amount);
+		fee = parseInt(fee);
+		if(fee == 0) fee = 1;
+		var message = "";
+		var version = "4";
+		var token = queryDict["token"];
+		var date = Math.round(parseInt(Date.now())/1000)-1;
+		var txinfo = amount + "-" + date + "-"  + dest + "-" + fee + "-" + message + "-" + pubkey + "-" + token + "-" + version;
+		ipcRenderer.send('setToSign', txinfo);
+		var signature = ipcRenderer.sendSync('request', "sign");
+		document.getElementById('amount').value = "";
+		document.getElementById('dest').value = "";
+		document.getElementById('sendbutton').classList.add("disabled");
+		if(confirm("Send " + amount/decimal + " " + token + " + " + vfee.toFixed(8) + " STLX on fees?"))
+		{
+			// receive address from main.js
+			var txvalues = JSON.stringify({'amount' : amount, 'fee' : fee, 'dest' : dest, 'pubkey' : pubkey, 'date' : date, 'version' : version, 'message' : message, 'signature' : signature, 'token' : token });
+			//var ldiv = document.getElementById('lastcommit');
+			//ldiv.innerHTML = mResult;
+			postData('https://node1.stlx.online/api/?q=transfer&symbol=' + token, txvalues)
+			  .then(data => {
+				//var obj = JSON.parse(data);
+				if(data.status == "ERROR")
+				{
+					alert("ERROR: " + data.response);
+				}
+				else
+				{
+					alert("SENT! Hash: " + data.response)
+				}
+				get_balance();
+			  });
+		}
+	}
+	
 	function get_balance()
 	{
 		fetch('https://node1.stlx.online/api/?q=getbalance&address=' + address)
@@ -64,24 +109,44 @@ a { color: #d0d0d0; }
 		});
 	}
 	
-	function get_coins()
+	function get_token_balance()
 	{
-		fetch('https://node1.stlx.online/api/?q=getcoinaddresses&address=' + address)
+		fetch('https://node1.stlx.online/api/?q=gettokensbalance&address=' + address)
 		.then(response => response.text())
 		.then((response) => {
 			var obj = JSON.parse(response);
-			if(obj.result.sugar != "")
+			for (const [key, value] of Object.entries(obj.tokensbalance)) {
+			  if(key == queryDict["token"])
+			  document.getElementById('tokenbalance').innerHTML = '<i class="lock green open icon"></i> ' + value[1]/decimal + ' ' + queryDict["token"];
+			}
+		});
+	}
+	
+	function get_token_info()
+	{
+		fetch('https://node1.stlx.online/server.php?q=gettokeninfo&token=' + queryDict["token"])
+		.then(response => response.text())
+		.then((response) => {
+			var obj = JSON.parse(response);
+			document.getElementById('tokenname').innerHTML = obj.token[0].name;
+			
+			if( obj.token[0].options.tradeable == 1)
 			{
-				document.getElementById('sugaraddress').innerHTML = obj.result.sugar;
-				document.getElementById('sugarsync').classList.add("disabled");
-				document.getElementById("sugarsync").style.display = "none";
-				document.getElementById("sugarmine").style.display = "";
+				document.getElementById("send").style.display = ""; 
+				document.getElementById("nosend").style.display = "none"; 
 			}
 			else
 			{
-				document.getElementById('sugarsync').classList.remove("disabled");
+				document.getElementById("send").style.display = "none"; 
+				document.getElementById("nosend").style.display = ""; 
 			}
 		});
+	}
+
+	function quit()
+	{
+		var mining = ipcRenderer.sendSync('request', "exit");
+		return;
 	}
 
 	setInterval(function() {
@@ -89,11 +154,14 @@ a { color: #d0d0d0; }
 		{
 			document.getElementById('address').value = address;
 			get_balance();
-			get_coins();
+			get_token_balance()
+			document.getElementById('tokenimage').innerHTML = '<img class="ui image tiny centered circular" src="./assets/' + queryDict["token"].toLowerCase() + '.png" />';
+			get_token_info();
 		}
-		miningcommand = "-a yespowersugar -o stratum+tcp://" + document.getElementById('pool').value + " -u " + document.getElementById('sugaraddress').innerHTML + " -t " + document.getElementById('threads').value + " " + document.getElementById('extraopts').value;
-		ipcRenderer.send('setToMine', miningcommand);
-		document.getElementById('mcommand').value = miningcommand;
+		if(document.getElementById('dest').value.length > 10 &&  document.getElementById('amount').value.length > 0)
+		{
+			document.getElementById('sendbutton').classList.remove("disabled");
+		}
 	}, 250);
 		
 	function startmining()
@@ -104,18 +172,9 @@ a { color: #d0d0d0; }
 		
 	setInterval(function() {
 		get_balance();
-		get_coins();
+		get_token_balance()
 	}, 30000);
 
-		function openexplorer() {
-		  require("electron").shell.openExternal("https://1explorer.sugarchain.org/address/" + document.getElementById('sugaraddress').innerHTML);
-		}
-
-function quit()
-	{
-		var mining = ipcRenderer.sendSync('request', "exit");
-		return;
-	}
   </script>
 
   </head>
@@ -143,7 +202,7 @@ function quit()
 		  <tr><td><a href="transactions.html"><i class="envelope icon"></i> Transactions</a></td></tr>
 		  <tr><td><a href="send.html"><i class="paper plane icon"></i> Send</a></td></tr>
 		  <tr><td><a href="staking.html"><i class="database icon"></i> Staking</a></td></tr>
-		  <tr><td><b><i class="tachometer alternate icon"></i> Mining</b></td></tr>
+		  <tr><td><a href="mining.html"><i class="tachometer alternate icon"></i> Mining</a></td></tr>
 		  </tbody>
 		  </table>
 		  </div>
@@ -156,73 +215,26 @@ function quit()
 		  <div class="ui tiny action input" style="width:100%;"><input readonly type="text" id="address" ><button onclick="copytoclipboard();" class="ui teal right labeled icon button">
 			<i class="clone icon"></i>
 			Copy
-		  </button></div><br><br>
-			<div id="mining" style="text-align:left;">
-			<img class="ui image tiny centered circular" src="./assets/sugar.png" />
-			<div style="text-align:center"><h3><a href="#null" onclick="openexplorer();" id="sugaraddress"></a></h3></div><br><br>
-			<table style="width:100%">
-			<tr>
-			<td style="width:50%">
-			<p><b>SELECT YOUR MINING POOL:</b></p>
-			<select id="pool" style="width:100%;" class="ui search dropdown">
-			  <option value="stratum-eu.rplant.xyz:17042">pool.rplant.xyz</option>
-			  <option value="sugar.ss.dxpool.com:3366">dxpool.com</option>
-			  <option value="pool.bullcpupool.com:3333">bullcpupool.com</option>
-			  <option value="139.129.229.26:7021">lepool.com.cn</option>
-			  <option value="1pool.sugarchain.org:5555">1pool.sugarchain.org</option>
-			  <option value="reallypool.ru:3032">reallypool.ru</option>
-			  <option value="2pool.sugarchain.org:5555">2pool.sugarchain.org</option>
-			  <option value="eu.poolmine.xyz:6238">poolmine.xyz</option>
-			</select>
-			</td>
-			<td style="width:50%">
-			<p><b>SELECT NUMBER OF THREADS:</b></p>
-			<select id="threads" style="width:100%;" class="ui search dropdown">
-			  <option value="1">1 thread</option>
-			  <option value="2">2 threads</option>
-			  <option value="3">3 threads</option>
-			  <option value="4">4 threads</option>
-			  <option value="5">5 threads</option>
-			  <option value="6">6 threads</option>
-			  <option value="7">7 threads</option>
-			  <option value="8">8 threads</option>
-			  <option value="12">12 threads</option>
-			  <option value="16">16 threads</option>
-			  <option value="20">20 threads</option>
-			  <option value="24">24 threads</option>
-			  <option value="32">32 threads</option>
-			  <option value="64">64 threads</option>
-			  <option value="128">128 threads</option>
-			</select>
-			</td>
-			</tr>
-			<tr>
-			<td colspan="2">
+		  </button></div><div class="ui divider"></div>
+			<div id="tokenimage"></div>
+			<div style="text-align:center"><h4><span id="tokenname"></span></h4></div><br>
+			<div style="text-align:center"><h4><b><span  style="padding:8px;border-radius: 6px;background:#333;opacity:0.9;" id="tokenbalance"></span></b></h4></div><br>
+			<div class="ui divider"></div>
 			<br>
-			<p><b>EXTRA OPTIONS (password, workerid, etc...). THIS IS OPTIONAL!</b></p>
-			<div style="width:100%;" class="ui input">
-				<input type="text" id="extraopts" placeholder="For example: -p password.workerID">
+			<div id="send" style="display:none">
+			 <div class="ui tiny input" style="width:100%;"><input type="text" id="dest" placeholder="Destination address..." ></div><br><br>
+			 <div class="ui tiny input" style="width:100%;"><input type="text" id="amount" placeholder="Token amount..."></div><br><br>
+			<div class="ui buttons">
+			  <button onclick="setbalance(25);" class="ui button">25%</button>
+			  <button onclick="setbalance(50);" class="ui button">50%</button>
+			  <button onclick="setbalance(75);" class="ui button">75%</button>
+			  <button onclick="setbalance(99.99);" class="ui red button">100%</button>
+			</div><br><br>
+			 <a href="#" id="sendbutton" onclick="send();" class="ui button disabled green">SEND</a>			
 			</div>
-			</td>
-			</tr>
-			<tr>
-			<td colspan="2">
-			<br>
-			<div style="width:100%;" class="ui right mini labeled input">
-			  <label for="mcommand" class="ui label">Mining command</label>
-			  <input type="text" readonly value="" id="mcommand">
+			<div id="nosend" style="display:none">
+				This token is not tradeable.
 			</div>
-			</td>
-			</tr>
-			<tr>
-			<td colspan="2">
-			<br>
-			<div style="text-align:center"><a href="#null" onclick="startmining();" class="ui button green"><i class="tachometer alternate icon"></i>START MINING</a>
-			<a href="./mining.html" class="ui button red"><i class="left arrow icon"></i>BACK</a></div>
-			</td>
-			</tr>
-			</table>		  
-		  </div>
 		</div>
 	</div>
 </body>

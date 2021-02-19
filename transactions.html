@@ -31,6 +31,7 @@ h2 { color: #fff; }
 	-webkit-user-drag: none;
 	-webkit-app-region: no-drag;
 }
+
 a { color: #d0d0d0; }
 </style>
 </head>
@@ -39,7 +40,6 @@ a { color: #d0d0d0; }
 	const {ipcRenderer} = require('electron');
 	// send password to main.js 
 	var address = ipcRenderer.sendSync('request', "address" );
-	var miningcommand = "";
 	
 	function copytoclipboard() {
 	  /* Get the text field */
@@ -53,6 +53,34 @@ a { color: #d0d0d0; }
 	  alert("Copied the text: " + copyText.value);
 	}
 	
+	function timeSince(date) {
+
+	  var seconds = Math.floor(new Date() / 1000) - date;
+
+	  var interval = seconds / 31536000;
+
+	  if (interval > 1) {
+		return Math.floor(interval) + " years ago";
+	  }
+	  interval = seconds / 2592000;
+	  if (interval > 1) {
+		return Math.floor(interval) + " months ago";
+	  }
+	  interval = seconds / 86400;
+	  if (interval > 1) {
+		return Math.floor(interval) + " days ago";
+	  }
+	  interval = seconds / 3600;
+	  if (interval > 1) {
+		return Math.floor(interval) + " hours ago";
+	  }
+	  interval = seconds / 60;
+	  if (interval > 1) {
+		return Math.floor(interval) + " minutes ago";
+	  }
+	  return Math.floor(seconds) + " seconds ago";
+	}
+	
 	function get_balance()
 	{
 		fetch('https://node1.stlx.online/api/?q=getbalance&address=' + address)
@@ -64,58 +92,94 @@ a { color: #d0d0d0; }
 		});
 	}
 	
-	function get_coins()
+	function get_transactions()
 	{
-		fetch('https://node1.stlx.online/api/?q=getcoinaddresses&address=' + address)
-		.then(response => response.text())
-		.then((response) => {
-			var obj = JSON.parse(response);
-			if(obj.result.sugar != "")
-			{
-				document.getElementById('sugaraddress').innerHTML = obj.result.sugar;
-				document.getElementById('sugarsync').classList.add("disabled");
-				document.getElementById("sugarsync").style.display = "none";
-				document.getElementById("sugarmine").style.display = "";
-			}
-			else
-			{
-				document.getElementById('sugarsync').classList.remove("disabled");
-			}
-		});
+		fetch('https://node1.stlx.online/api/?q=gettransactions&address=' + address)
+			.then(response => response.text())
+			.then((response) => {
+				var obj = JSON.parse(response);
+				var x = 0;
+				var confirmed = "";
+				var c = '<table class="ui inverted table"><thead><th>Status</th><th>Date</th><th>Hash</th><th style="text-align:right;">Amount</th></thead><tbody>';
+				if(obj.transactions.length > 10) var txcount = 10;
+				else var txcount = obj.transactions.length;
+				for(x=0;x<txcount;x++)
+				{
+					if(obj.transactions[x].confirmed == 1) confirmed = "Confirmed";
+					else if(obj.transactions[x].confirmed == -1) confirmed = "In mempool";
+					else confirmed = "Unconfirmed";
+					
+					if(obj.transactions[x].src == obj.transactions[x].dest)
+					{
+						if(obj.transactions[x].confirmed == -1)
+						{
+							c += '<tr><td><i class="paper plane icon"></i> ';
+						}
+						else
+						{
+							c += '<tr><td><i class="cloud upload icon"></i> ';
+						}
+						c +=  confirmed + '</td><td>' + timeSince(obj.transactions[x].txdate) + '</td><td><a href="#null" onclick="openexternal(\'https://stlx.online/explorer?tx=' + obj.transactions[x].hash + '\');">' + obj.transactions[x].hash.substr(0, 32) + '...</a></td><td style="text-align:right;"><span class="ui label red">- ' + obj.transactions[x].fee/decimal + ' STLX</span></td></tr>';
+					}
+					else if(obj.transactions[x].src == address)
+					{
+						if(obj.transactions[x].confirmed == -1)
+						{
+							c += '<tr><td><i class="paper plane icon"></i> ';
+						}
+						else
+						{
+							c += '<tr><td><i class="cloud upload icon"></i> ';
+						}
+						c +=  confirmed + '</td><td>' + timeSince(obj.transactions[x].txdate) + '</td><td><a href="#null" onclick="openexternal(\'https://stlx.online/explorer?tx=' + obj.transactions[x].hash + '\');">' + obj.transactions[x].hash.substr(0, 32) + '...</a></td><td style="text-align:right;"><span class="ui label red">- ' + (obj.transactions[x].amount+obj.transactions[x].fee)/decimal + ' STLX</span></td></tr>';
+					}
+					else if(obj.transactions[x].dest == address)
+					{
+						if(obj.transactions[x].confirmed == -1)
+						{
+							c += '<tr><td><i class="paper plane icon"></i> ';
+						}
+						else
+						{
+							c += '<tr><td><i class="cloud download icon"></i> ';
+						}
+						c +=  confirmed + '</td><td>' + timeSince(obj.transactions[x].txdate) + '</td><td><a href="#null" onclick="openexternal(\'https://stlx.online/explorer?t=' + obj.transactions[x].hash + '\');">' + obj.transactions[x].hash.substr(0, 32) + '...</a></td><td style="text-align:right;"><span class="ui label green">+ ' + obj.transactions[x].amount/decimal + ' STLX</span></td></tr>';
+					}
+					
+				}
+				if(obj.transactions.length == 0)
+				{
+					c += '<tr><td colspan="5">No transactions</td></tr>';
+				}
+				c += '<tr><td colspan="4" style="text-align:center;"><a href="#null" onclick="openexternal(\'https://stlx.online/explorer?a=' + address + '\');"><i class="icon cube"></i> View address in block explorer</a></td></tr></tbody></table>';
+				document.getElementById('transactions').innerHTML = c;
+			});
 	}
 
-	setInterval(function() {
-		if(document.getElementById('address').value != address)
-		{
-			document.getElementById('address').value = address;
-			get_balance();
-			get_coins();
-		}
-		miningcommand = "-a yespowersugar -o stratum+tcp://" + document.getElementById('pool').value + " -u " + document.getElementById('sugaraddress').innerHTML + " -t " + document.getElementById('threads').value + " " + document.getElementById('extraopts').value;
-		ipcRenderer.send('setToMine', miningcommand);
-		document.getElementById('mcommand').value = miningcommand;
-	}, 250);
-		
-	function startmining()
-	{
-		var mining = ipcRenderer.sendSync('request', "startmining");
-		return;
-	}
-		
-	setInterval(function() {
-		get_balance();
-		get_coins();
-	}, 30000);
-
-		function openexplorer() {
-		  require("electron").shell.openExternal("https://1explorer.sugarchain.org/address/" + document.getElementById('sugaraddress').innerHTML);
-		}
-
-function quit()
+	function quit()
 	{
 		var mining = ipcRenderer.sendSync('request', "exit");
 		return;
 	}
+	
+	setInterval(function() {
+		if(document.getElementById('address').value != address)
+		{
+			document.getElementById('address').value = address;
+			get_transactions();
+			get_balance();
+		}
+	}, 250);
+	
+	setInterval(function() {
+		get_transactions();
+		get_balance();
+	}, 30000);
+	
+	
+	function openexternal(link) {
+  require("electron").shell.openExternal(link);
+}
   </script>
 
   </head>
@@ -140,10 +204,10 @@ function quit()
 		  </thead>
 		  <tbody>
 		  <tr><td><a href="overview.html"><i class="list alternate icon"></i> Overview</a></td></tr>
-		  <tr><td><a href="transactions.html"><i class="envelope icon"></i> Transactions</a></td></tr>
+		  <tr><td><b><i class="envelope icon"></i> Transactions</b></td></tr>
 		  <tr><td><a href="send.html"><i class="paper plane icon"></i> Send</a></td></tr>
 		  <tr><td><a href="staking.html"><i class="database icon"></i> Staking</a></td></tr>
-		  <tr><td><b><i class="tachometer alternate icon"></i> Mining</b></td></tr>
+		  <tr><td><a href="mining.html"><i class="tachometer alternate icon"></i> Mining</a></td></tr>
 		  </tbody>
 		  </table>
 		  </div>
@@ -156,72 +220,10 @@ function quit()
 		  <div class="ui tiny action input" style="width:100%;"><input readonly type="text" id="address" ><button onclick="copytoclipboard();" class="ui teal right labeled icon button">
 			<i class="clone icon"></i>
 			Copy
-		  </button></div><br><br>
-			<div id="mining" style="text-align:left;">
-			<img class="ui image tiny centered circular" src="./assets/sugar.png" />
-			<div style="text-align:center"><h3><a href="#null" onclick="openexplorer();" id="sugaraddress"></a></h3></div><br><br>
-			<table style="width:100%">
-			<tr>
-			<td style="width:50%">
-			<p><b>SELECT YOUR MINING POOL:</b></p>
-			<select id="pool" style="width:100%;" class="ui search dropdown">
-			  <option value="stratum-eu.rplant.xyz:17042">pool.rplant.xyz</option>
-			  <option value="sugar.ss.dxpool.com:3366">dxpool.com</option>
-			  <option value="pool.bullcpupool.com:3333">bullcpupool.com</option>
-			  <option value="139.129.229.26:7021">lepool.com.cn</option>
-			  <option value="1pool.sugarchain.org:5555">1pool.sugarchain.org</option>
-			  <option value="reallypool.ru:3032">reallypool.ru</option>
-			  <option value="2pool.sugarchain.org:5555">2pool.sugarchain.org</option>
-			  <option value="eu.poolmine.xyz:6238">poolmine.xyz</option>
-			</select>
-			</td>
-			<td style="width:50%">
-			<p><b>SELECT NUMBER OF THREADS:</b></p>
-			<select id="threads" style="width:100%;" class="ui search dropdown">
-			  <option value="1">1 thread</option>
-			  <option value="2">2 threads</option>
-			  <option value="3">3 threads</option>
-			  <option value="4">4 threads</option>
-			  <option value="5">5 threads</option>
-			  <option value="6">6 threads</option>
-			  <option value="7">7 threads</option>
-			  <option value="8">8 threads</option>
-			  <option value="12">12 threads</option>
-			  <option value="16">16 threads</option>
-			  <option value="20">20 threads</option>
-			  <option value="24">24 threads</option>
-			  <option value="32">32 threads</option>
-			  <option value="64">64 threads</option>
-			  <option value="128">128 threads</option>
-			</select>
-			</td>
-			</tr>
-			<tr>
-			<td colspan="2">
-			<br>
-			<p><b>EXTRA OPTIONS (password, workerid, etc...). THIS IS OPTIONAL!</b></p>
-			<div style="width:100%;" class="ui input">
-				<input type="text" id="extraopts" placeholder="For example: -p password.workerID">
-			</div>
-			</td>
-			</tr>
-			<tr>
-			<td colspan="2">
-			<br>
-			<div style="width:100%;" class="ui right mini labeled input">
-			  <label for="mcommand" class="ui label">Mining command</label>
-			  <input type="text" readonly value="" id="mcommand">
-			</div>
-			</td>
-			</tr>
-			<tr>
-			<td colspan="2">
-			<br>
-			<div style="text-align:center"><a href="#null" onclick="startmining();" class="ui button green"><i class="tachometer alternate icon"></i>START MINING</a>
-			<a href="./mining.html" class="ui button red"><i class="left arrow icon"></i>BACK</a></div>
-			</td>
-			</tr>
-			</table>		  
+		  </button></div>
+		<div class="ui divider"></div>
+				<div id="transactions"></div>
+		  
 		  </div>
 		</div>
 	</div>
