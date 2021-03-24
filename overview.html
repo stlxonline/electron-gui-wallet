@@ -112,10 +112,13 @@ a { color: #d0d0d0; }
 				}*/
 				for (const [key, value] of Object.entries(obj.tokensbalance))
 				{
-					c += '<tr><td><a href="token.html?token=' + key + '"><img src="assets/' + key + '.png" class="ui mini avatar image circular" > <b>' + value[3] + '</b></a></td>';
-					c += '<td>' + key + '</td>';
-					c += '<td style="text-align:right;">' + value[1]/value[2] + ' ' + key + '</td>';
-					c += '<td style="text-align:right;">' + value[0]/value[2] + ' ' + key + '</td></tr>';
+					if(value[0]+value[1] > 0 || key == "STLG")
+					{
+						c += '<tr><td><a href="token.html?token=' + key + '"><img src="assets/' + key + '.png" class="ui mini avatar image circular" > <b>' + value[3] + '</b></a></td>';
+						c += '<td>' + key + '</td>';
+						c += '<td style="text-align:right;">' + parseFloat(value[1]/value[2]).toFixed(8) + ' ' + key + '</td>';
+						c += '<td style="text-align:right;">' + parseFloat(value[0]/value[2]).toFixed(8) + ' ' + key + '</td></tr>';
+					}
 				}
 				document.getElementById('tokens').innerHTML = c;
 			});

@@ -116,35 +116,63 @@ a { color: #d0d0d0; }
 		});
 	}
 
-	function setbalance(value)
+	function setbalance(value, src, dest)
 	{
-		var amnt = document.getElementById('available').innerHTML.replace(' STLX', '');
+		var amnt = document.getElementById(src).innerHTML.replace(' STLX', '');
 		amnt = parseFloat(parseFloat(amnt)*value/100);
-		document.getElementById('amount').value = amnt.toFixed(8);
+		document.getElementById(dest).value = amnt.toFixed(8);
+	}
+	
+	function showopt(opt)
+	{
+		if(opt == 1)
+		{
+			document.getElementById("stake").style.display = "";
+			document.getElementById("unstake").style.display = "none";
+			document.getElementById("vote").style.display = "none";
+			document.getElementById('optstake').classList.add("blue");
+			document.getElementById('optunstake').classList.remove("blue");
+			document.getElementById('optvote').classList.remove("blue");
+		}
+		if(opt == 2)
+		{
+			document.getElementById("stake").style.display = "none";
+			document.getElementById("unstake").style.display = "";
+			document.getElementById("vote").style.display = "none";
+			document.getElementById('optstake').classList.remove("blue");
+			document.getElementById('optunstake').classList.add("blue");
+			document.getElementById('optvote').classList.remove("blue");
+		}
+		if(opt == 3)
+		{
+			document.getElementById("stake").style.display = "none";
+			document.getElementById("unstake").style.display = "none";
+			document.getElementById("vote").style.display = "";
+			document.getElementById('optstake').classList.remove("blue");
+			document.getElementById('optunstake').classList.remove("blue");
+			document.getElementById('optvote').classList.add("blue");
+		}
 	}
 
-	function unstake(hash)
+	function unstake()
 	{
 		amount = 0;
 		var dest = "STLX0000000001";
-		var fee = 0;
-		var message = hash;
-		var version = "1";
+		var fee = 300;
+		var uamount = parseInt(document.getElementById('uamount').value*decimal);
+		var message = "unstake;" + uamount;
+		var version = "4";
 		var date = Math.round(parseInt(Date.now())/1000)-1;
-		var txinfo = amount + "-" + fee + "-"  + dest + "-" + message + "-" + version + "-" + pubkey + "-" + date;
+		var txinfo = amount + "-" + date + "-" + dest + "-" + fee + "-" + message + "-" + pubkey + "-" + version;
 		ipcRenderer.send('setToSign', txinfo);
 		var signature = ipcRenderer.sendSync('request', "sign");
-		document.getElementById('amount').value = "";
-		document.getElementById('sendbutton').classList.add("disabled");
-		if(confirm("Are you sure to unstake? Coin will take 3,000 block to come back..." ))
+		document.getElementById('uamount').value = "";
+		//document.getElementById('sendbutton').classList.add("disabled");
+		if(confirm("Are you sure to unstake? Coins will take 720 blocks to come back..." ))
 		{
-			// receive address from main.js
 			var txvalues = JSON.stringify({'amount' : amount, 'fee' : fee, 'dest' : dest, 'pubkey' : pubkey, 'date' : date, 'version' : version, 'message' : message, 'signature' : signature });
-			//var ldiv = document.getElementById('lastcommit');
-			//ldiv.innerHTML = mResult;
 			postData('https://node1.stlx.online/api/?q=transfer', txvalues)
 			  .then(data => {
-				//var obj = JSON.parse(data);
 				if(data.status == "ERROR")
 				{
 					alert("ERROR: " + data.response);
@@ -155,59 +183,18 @@ a { color: #d0d0d0; }
 				}
 				get_balance();
 				get_stlg_balance()
-				get_stakes();
+				get_staked();
 			  });
 		}
 	}
 
-	function get_stakes()
+	function get_staked()
 	{
-		fetch('https://node1.stlx.online/api/?q=getstakes&address=' + address)
+		fetch('https://node1.stlx.online/api/?q=getstaked&address=' + address)
 			.then(response => response.text())
 			.then((response) => {
 				var obj = JSON.parse(response);
-				var x = 0;
-				var unstake = "";
-				var confirmed = "";
-				var c = '<table class="ui inverted table"><thead><th>Status</th><th>Date</th><th>Hash</th><th style="text-align:right;">Amount</th><th style="text-align:right;">Actions</th></thead><tbody>';
-				if(obj.transactions.length > 10) var txcount = 10;
-				else var txcount = obj.transactions.length;
-				for(x=0;x<txcount;x++)
-				{
-					if(obj.transactions[x].confirmed == 0)
-					{
-						confirmed = "Staking";
-						unstake = '<a onclick="unstake(\'' + obj.transactions[x].hash + '\');"· href="#null" class="ui label yellow"><i class="database icon"></i>Unstake</a>';
-					}
-					else if(obj.transactions[x].confirmed > 0)
-					{
-						confirmed = "Unstaking<br><span style='font-size:10px;color:#999;'>" + obj.transactions[x].confirmed + " blocks to go<span>";
-						unstake = '<a href="#null" class="ui label disabled yellow"><i class="database icon"></i>Unstaking</a>';
-					}
-					else
-					{
-						confirmed = "Not staking<br><span style='font-size:10px;color:#999;'>" + obj.transactions[x].confirmed*(-1) + " blocks to go<span>";
-						unstake = '<a onclick="unstake(\'' + obj.transactions[x].hash + '\');"· href="#null" class="ui label yellow"><i class="database icon"></i>Unstake</a>';
-					}
-					if(obj.transactions[x].src == address)
-					{
-						if(obj.transactions[x].confirmed == 0)
-						{
-							c += '<tr><td><i class="database icon"></i> ';
-						}
-						else
-						{
-							c += '<tr><td><i class="clock icon"></i> ';
-						}
-						c +=  confirmed + '</td><td>' + timeSince(obj.transactions[x].txdate) + '</td><td><a href="#null" onclick="openexternal(\'https://stlx.online/explorer?tx=' + obj.transactions[x].hash + '\');">' + obj.transactions[x].hash.substr(0, 32) + '...</a></td><td style="text-align:right;"><span class="ui label blue">' + obj.transactions[x].amount/decimal + ' STLX</span></td><td style="text-align:right;">' + unstake + '</td></tr>';
-					}
-				}
-				if(obj.transactions.length == 0)
-				{
-					c += '<tr><td colspan="5">No stakes</td></tr>';
-				}
-				c += '<tr><td colspan="5" style="text-align:center;"><a href="#null" onclick="openexternal(\'https://stlx.online/explorer?a=' + address + '\');"><i class="icon cube"></i> View address in block explorer</a></td></tr></tbody></table>';
-				document.getElementById('stakes').innerHTML = c;
+				document.getElementById('stlxstaked').innerHTML = obj.staked/decimal;
 			});
 	}
 
@@ -217,36 +204,32 @@ a { color: #d0d0d0; }
 		.then(response => response.text())
 		.then((response) => {
 			var obj = JSON.parse(response);
-			document.getElementById('stlgavailable').innerHTML = '<i class="lock green open icon"></i> ' + obj.tokensbalance.STLG[1]/decimal + ' STLG';
-			document.getElementById('stlglocked').innerHTML = '<i class="lock red icon"></i> ' + obj.tokensbalance.STLG[0]/decimal + ' STLG';
+			document.getElementById('stlgavailable').innerHTML = obj.tokensbalance.STLG[1]/decimal;
+			document.getElementById('gstlxavailable').innerHTML = obj.tokensbalance.GSTLX[1]/decimal;
 		});
 	}
 
 
 	function send()
 	{
-		var amount = parseFloat(document.getElementById('amount').value);
+		var amount = parseFloat(document.getElementById('samount').value);
 		amount = amount*decimal;
 		var dest = "STLX0000000001";
-		var fee = 0;
+		var fee = 300;
 		amount = parseInt(amount);
 		var message = "";
-		var version = "1";
+		var version = "4";
 		var date = Math.round(parseInt(Date.now())/1000)-1;
-		var txinfo = amount + "-" + fee + "-"  + dest + "-" + message + "-" + version + "-" + pubkey + "-" + date;
+		var txinfo = amount + "-" + date + "-" + dest + "-"  + fee + "-" + message + "-" + pubkey + "-" + version;
 		ipcRenderer.send('setToSign', txinfo);
 		var signature = ipcRenderer.sendSync('request', "sign");
-		document.getElementById('amount').value = "";
-		document.getElementById('sendbutton').classList.add("disabled");
-		if(confirm("Stake " + amount/decimal + " STLX? If you unstake, it will take 3,000 block to come back..." ))
+		document.getElementById('samount').value = "";
+		//document.getElementById('sendbutton').classList.add("disabled");
+		if(confirm("Stake " + amount/decimal + " STLX? If you unstake, it will take 720 blocks to come back..." ))
 		{
-			// receive address from main.js
 			var txvalues = JSON.stringify({'amount' : amount, 'fee' : fee, 'dest' : dest, 'pubkey' : pubkey, 'date' : date, 'version' : version, 'message' : message, 'signature' : signature });
-			//var ldiv = document.getElementById('lastcommit');
-			//ldiv.innerHTML = mResult;
 			postData('https://node1.stlx.online/api/?q=transfer', txvalues)
 			  .then(data => {
-				//var obj = JSON.parse(data);
 				if(data.status == "ERROR")
 				{
 					alert("ERROR: " + data.response);
@@ -257,7 +240,7 @@ a { color: #d0d0d0; }
 				}
 				get_balance();
 				get_stlg_balance()
-				get_stakes();
+				get_staked();
 			  });
 		}
 	}
@@ -268,7 +251,7 @@ a { color: #d0d0d0; }
 			document.getElementById('address').value = address;
 			get_balance();
 			get_stlg_balance()
-			get_stakes();
+			get_staked();
 		}
 		if(document.getElementById('amount').value.length > 0)
 		{
@@ -277,7 +260,7 @@ a { color: #d0d0d0; }
 	}, 250);
 		
 	setInterval(function() {
-		get_stakes();
+		get_staked();
 		get_balance();
 		get_stlg_balance()
 	}, 30000);
@@ -328,23 +311,61 @@ a { color: #d0d0d0; }
 			Copy
 		  </button></div>
 			<div class="ui divider"></div>
-			<div id="send">
-			 <div class="ui tiny input" style="width:100%;"><input type="text" id="amount" placeholder="STLX amount"></div><br><br>
-			<div class="ui buttons">
-			  <button onclick="setbalance(25);" class="ui button">25%</button>
-			  <button onclick="setbalance(50);" class="ui button">50%</button>
-			  <button onclick="setbalance(75);" class="ui button">75%</button>
-			  <button onclick="setbalance(100);" class="ui red button">100%</button>
-			</div><br><br>
-			 <a href="#" id="sendbutton" onclick="send();" class="ui button disabled green">STAKE</a>			
-			</div>
-			<div class="ui divider"></div>
 			<table class="ui table inverted">
 				<thead>
-					<th style="width:33%;"><img src="./assets/stlg.png" class="ui image circular avatar mini" /> Stellia GAS <i>(STLG)</i></th>
-					<th style="width:33%;text-align:right;"><span id="stlgavailable"></span></th>
-					<th style="width:33%;text-align:right;"><span id="stlglocked"></span></th>
+					<th style="width:30%;"><img src="./assets/stlg.png" class="ui image circular avatar mini" /> Stellia GAS <i>(STLG)</i></th>
+					<th style="width:30%;text-align:right;"><i class="lock green open icon"></i> <span id="stlgavailable">0</span> STLG</th>
+					<th style="width:40%;text-align:right;">
+					<button style="margin:2px;" class="ui mini button">VOTE</button>
+					</th>
 				</thead>
+				<thead>
+					<th style="width:30%;"><img src="./assets/gstlx.png" class="ui image circular avatar mini" /> Stellia GOV <i>(SGTLX)</i></th>
+					<th style="width:30%;text-align:right;"><i class="lock green open icon"></i> <span id="gstlxavailable">0</span> GSTLX</th>
+					<th style="width:40%;text-align:right;">
+					<button style="margin:2px;" id="optvote" onclick="showopt(3);" class="ui mini button">VOTE</button>
+					</th>
+				</thead>
+				<thead>
+					<th style="width:30%;"><img src="./assets/stlx.png" class="ui image circular avatar mini" /> Staked <i>(STLX)</i></th>
+					<th style="width:30%;text-align:right;"><i class="database yellow icon"></i> <span id="stlxstaked">0</span> STLX</th>
+					<th style="width:40%;text-align:right;">
+					<button style="margin:2px;" id="optstake" onclick="showopt(1);" class="ui mini button blue">STAKE</button>
+					<button id="optunstake" style="margin:2px;" onclick="showopt(2);" class="ui mini button">UNSTAKE</button>
+					</th>
+				</thead>
+				<tbody>
+					<tr>
+						<td colspan="3">
+						<div id="stake">
+						 <div class="ui tiny action left icon input" style="width:100%;">
+						 <i class="icon"><img style="margin:2px;" class="ui mini image" src="./assets/stlx.png"></i>
+						 <input type="text" id="samount" placeholder="STLX amount to stake">
+						 <button onclick="setbalance(25, 'available', 'samount');" class="ui button">25%</button>
+						  <button onclick="setbalance(50, 'available', 'samount');" class="ui button">50%</button>
+						  <button onclick="setbalance(75, 'available', 'samount');" class="ui button">75%</button>
+						  <button onclick="setbalance(99.999, 'available', 'samount');" class="ui red button">100%</button>
+						  <button id="sendbutton" onclick="send();" class="ui button green">STAKE</button>
+						 </div>		
+						</div>
+						<div id="unstake" style="display:none">
+						 <div class="ui tiny action left icon input" style="width:100%;">
+						 <i class="icon"><img style="margin:2px;" class="ui mini image" src="./assets/stlx.png"></i>
+						 <input type="text" id="uamount" placeholder="STLX amount to unstake">
+						 <button onclick="setbalance(25, 'stlxstaked', 'uamount');" class="ui button">25%</button>
+						  <button onclick="setbalance(50, 'stlxstaked', 'uamount');" class="ui button">50%</button>
+						  <button onclick="setbalance(75, 'stlxstaked', 'uamount');" class="ui button">75%</button>
+						  <button onclick="setbalance(100, 'stlxstaked', 'uamount');" class="ui red button">100%</button>
+						  <button id="sendbutton" onclick="unstake();" class="ui button green">UNSTAKE</button>
+						 </div>		
+						</div>
+						<div id="vote" style="display:none">
+						 Voting will be enabled when POS start...	
+						</div>
+						
+						</td>
+					</tr>
+				</tbody>
 			</table>
 			</table>
 		  <div id="stakes"></div>

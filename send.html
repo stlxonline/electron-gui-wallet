@@ -40,6 +40,10 @@ a { color: #d0d0d0; }
 	// send password to main.js 
 	var address = ipcRenderer.sendSync('request', "address" );
 	var pubkey = ipcRenderer.sendSync('request', "pubkey" );
+	var isatomic = 0;
+	var atomicp = 0;
+	var atoms = [];
+	var tokendecimals = {};
 	
 	async function postData(url = '', data = {}) {
 	  // Default options are marked with *
@@ -82,52 +86,145 @@ a { color: #d0d0d0; }
 		});
 	}
 
-	function setbalance(value)
+	function setbalance(value, src, dest)
 	{
-		var amnt = document.getElementById('available').innerHTML.replace(' STLX', '');
+		var amnt = document.getElementById(src).innerHTML.replace(' STLX', '');
 		amnt = parseFloat(parseFloat(amnt)*value/100);
-		document.getElementById('amount').value = amnt.toFixed(8);
+		document.getElementById(dest).value = amnt.toFixed(8);
+	}
+	
+	function gettokens()
+	{
+		fetch('https://node1.stlx.online/api/?q=gettokensbalance&address=' + address)
+			.then(response => response.text())
+			.then((response) => {
+				var obj = JSON.parse(response);
+				var x = 0;
+				var c = '<div class="ui yellow label"><i class="info icon"></i>With atomic transactions you can attach some tokens to you standard transactions. If you want to send tokens only, leave STLX amount at 0.</div><br><br>';
+				for (const [key, value] of Object.entries(obj.tokensbalance))
+				{
+					if(value[0]+value[1] > 0 && value[4] == 1)
+					{
+						atomicp += 1;
+						atoms.push(key);
+						tokendecimals[key] = value[2];
+						c += '<span id="' + key + '_balance" style="display:none;">' + parseFloat(value[1]/value[2]).toFixed(8) + '</span><div class="ui tiny action left icon input" style="width:100%;"><i class="icon"><img style="margin:2px;" class="ui mini image" src="./assets/' + key + '.png"></i><input type="text" id="' + key + '_amount" placeholder="' + key + ' amount">';
+						c += '<button onclick="setbalance(25, \'' + key + '_balance\', \'' + key + '_amount\');" class="ui button">25%</button><button onclick="setbalance(50, \'' + key + '_balance\', \'' + key + '_amount\');" class="ui button">50%</button>';
+						c += '<button onclick="setbalance(75, \'' + key + '_balance\', \'' + key + '_amount\');" class="ui button">75%</button><button onclick="setbalance(100, \'' + key + '_balance\', \'' + key + '_amount\');" class="ui red button">100%</button></div><br><br>';
+					}
+				}
+				document.getElementById('tokens').innerHTML = c;
+			});
+	}
+	
+	function showatomic()
+	{
+		if(isatomic == 0 && atomicp > 0)
+		{
+			isatomic = 1;
+			document.getElementById("tokens").style.display = "";
+			document.getElementById("atomicbutton").innerHTML = '<i class="box icon"></i> UNSET ATOMIC TX';
+		}
+		else
+		{
+			isatomic = 0;
+			document.getElementById("tokens").style.display = "none";
+			document.getElementById("atomicbutton").innerHTML = '<i class="box icon"></i> SET ATOMIC TX';
+		}
+		if(atomicp == 0)
+		{
+			alert("You doesn't have transferible tokens for start an atomic transaction");
+		}
 	}
 	
 	function send()
 	{
-		var vfee = 0.0001;
-		var amount = parseFloat(document.getElementById('amount').value);
-		amount = amount*decimal;
-		var dest = document.getElementById('dest').value;
-		var fee = Math.round(amount*vfee);
-		amount = parseInt(amount);
-		fee = parseInt(fee);
-		if(fee == 0) fee = 1;
-		var message = "";
-		var version = "4";
-		var token = "";
-		var date = Math.round(parseInt(Date.now())/1000)-1;
-		var txinfo = amount + "-" + date + "-"  + dest + "-" + fee + "-" + message + "-" + pubkey + "-" + token + "-" + version;
-		ipcRenderer.send('setToSign', txinfo);
-		var signature = ipcRenderer.sendSync('request', "sign");
-		document.getElementById('amount').value = "";
-		document.getElementById('dest').value = "";
-		document.getElementById('sendbutton').classList.add("disabled");
-		if(confirm("Send " + amount/decimal + " STLX + " + (Math.ceil(parseFloat(amount*0.0001))/decimal).toFixed(4) + " STLX on fees?"))
+		if(isatomic == 0)
 		{
-			// receive address from main.js
-			var txvalues = JSON.stringify({'amount' : amount, 'fee' : fee, 'dest' : dest, 'pubkey' : pubkey, 'date' : date, 'version' : version, 'message' : message, 'signature' : signature, 'token' : token });
-			//var ldiv = document.getElementById('lastcommit');
-			//ldiv.innerHTML = mResult;
-			postData('https://node1.stlx.online/api/?q=transfer', txvalues)
-			  .then(data => {
-				//var obj = JSON.parse(data);
-				if(data.status == "ERROR")
+			var amount = parseFloat(document.getElementById('amount').value);
+			amount = amount*decimal;
+			var dest = document.getElementById('dest').value;
+			var fee = 300;
+			var message = "";
+			var version = "4";
+			var token = "";
+			var date = Math.round(parseInt(Date.now())/1000)-1;
+			var txinfo = amount + "-" + date + "-"  + dest + "-" + fee + "-" + message + "-" + pubkey + "-" + token + "-" + version;
+			ipcRenderer.send('setToSign', txinfo);
+			var signature = ipcRenderer.sendSync('request', "sign");
+			document.getElementById('amount').value = "";
+			document.getElementById('dest').value = "";
+			document.getElementById('sendbutton').classList.add("disabled");
+			if(confirm("Send " + amount/decimal + " STLX + " + (fee/decimal).toFixed(8) + " STLX on fees?"))
+			{
+				// receive address from main.js
+				var txvalues = JSON.stringify({'amount' : amount, 'fee' : fee, 'dest' : dest, 'pubkey' : pubkey, 'date' : date, 'version' : version, 'message' : message, 'signature' : signature, 'token' : token });
+				//var ldiv = document.getElementById('lastcommit');
+				//ldiv.innerHTML = mResult;
+				postData('https://node1.stlx.online/api/?q=transfer', txvalues)
+				  .then(data => {
+					//var obj = JSON.parse(data);
+					if(data.status == "ERROR")
+					{
+						alert("ERROR: " + data.response);
+					}
+					else
+					{
+						alert("SENT! Hash: " + data.response)
+					}
+					get_balance();
+				  });
+			}
+		}
+		else
+		{
+			var amount = parseFloat(document.getElementById('amount').value);
+			amount = amount*decimal;
+			var dest = document.getElementById('dest').value;
+			var fee = 500;
+			var message = "";
+			var version = "4";
+			var token = "";
+			var date = Math.round(parseInt(Date.now())/1000)-1;
+			
+			var transactions = "";
+			atoms.forEach(function(atom, index) {
+				if(document.getElementById(atom + '_amount').value*tokendecimals[atom] > 0)
 				{
-					alert("ERROR: " + data.response);
+					transactions += atom + "-" + document.getElementById(atom + '_amount').value*tokendecimals[atom] + "-";
 				}
-				else
+			});
+			transactions = transactions.slice(0, -1);
+			
+			if(transactions.length > 5)
+			{
+				var txinfo = amount + "-" + date + "-"  + dest + "-" + fee + "-" + message + "-" + pubkey + "-" + token + "-" + transactions + "-" + version;
+				ipcRenderer.send('setToSign', txinfo);
+				var signature = ipcRenderer.sendSync('request', "sign");
+				document.getElementById('amount').value = "";
+				document.getElementById('dest').value = "";
+				document.getElementById('sendbutton').classList.add("disabled");
+				if(confirm("Send atomic transaction? Fees: " + (fee/decimal).toFixed(8) + " STLX"))
 				{
-					alert("SENT! Hash: " + data.response)
+					// receive address from main.js
+					var txvalues = JSON.stringify({'amount' : amount, 'fee' : fee, 'dest' : dest, 'pubkey' : pubkey, 'date' : date, 'version' : version, 'message' : message, 'signature' : signature, 'transactions' : transactions, 'token' : token });
+					//var ldiv = document.getElementById('lastcommit');
+					//ldiv.innerHTML = mResult;
+					postData('https://node1.stlx.online/api/?q=atransfer', txvalues)
+					  .then(data => {
+						//var obj = JSON.parse(data);
+						if(data.status == "ERROR")
+						{
+							alert("ERROR: " + data.response);
+						}
+						else
+						{
+							alert("SENT! Hash: " + data.response)
+						}
+						get_balance();
+					  });
 				}
-				get_balance();
-			  });
+			}
 		}
 	}
 
@@ -136,11 +233,18 @@ a { color: #d0d0d0; }
 		{
 			document.getElementById('address').value = address;
 			get_balance();
+			gettokens();
+			document.getElementById('atomicbutton').classList.remove("disabled");
+		}
+		if(document.getElementById('amount').value == "")
+		{
+			document.getElementById('amount').value = "0";
 		}
 		if(document.getElementById('dest').value.length > 10 &&  document.getElementById('amount').value.length > 0)
 		{
 			document.getElementById('sendbutton').classList.remove("disabled");
 		}
+		
 	}, 250);
 
 	function quit()
@@ -196,14 +300,19 @@ a { color: #d0d0d0; }
 		  </button></div><div class="ui divider"></div>
 			<div id="send">
 			 <div class="ui tiny input" style="width:100%;"><input type="text" id="dest" placeholder="Destination address..." ></div><br><br>
-			 <div class="ui tiny input" style="width:100%;"><input type="text" id="amount" placeholder="STLX amount"></div><br><br>
-			<div class="ui buttons">
-			  <button onclick="setbalance(25);" class="ui button">25%</button>
-			  <button onclick="setbalance(50);" class="ui button">50%</button>
-			  <button onclick="setbalance(75);" class="ui button">75%</button>
-			  <button onclick="setbalance(99.99);" class="ui red button">100%</button>
-			</div><br><br>
-			 <a href="#" id="sendbutton" onclick="send();" class="ui button disabled green">SEND</a>			
+			 
+			 <div class="ui tiny action left icon input" style="width:100%;">
+			 <i class="icon"><img style="margin:2px;" class="ui mini image" src="./assets/stlx.png"></i>
+			 <input type="text" id="amount" placeholder="STLX amount">
+			 <button onclick="setbalance(25, 'available', 'amount');" class="ui button">25%</button>
+			  <button onclick="setbalance(50, 'available', 'amount');" class="ui button">50%</button>
+			  <button onclick="setbalance(75, 'available', 'amount');" class="ui button">75%</button>
+			  <button onclick="setbalance(99.999, 'available', 'amount');" class="ui red button">100%</button>
+			 </div>
+			 <div class="ui divider"></div>
+			 <div id="tokens" style="display:none;"></div>
+			 <a href="#" id="atomicbutton" onclick="showatomic();" class="ui disabled button blue"><i class="box icon"></i> SET ATOMIC TX</a>
+			 <a href="#" id="sendbutton" onclick="send();" class="ui button disabled green"><i class="paper plane icon"></i> SEND</a>
 			</div>
 		  
 		  </div>
