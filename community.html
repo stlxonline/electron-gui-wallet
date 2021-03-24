@@ -85,45 +85,6 @@ a { color: #d0d0d0; }
 	  alert("Copied the text: " + copyText.value);
 	}
 	
-	function send()
-	{
-		var amount = parseFloat(document.getElementById('amount').value);
-		amount = amount*decimal;
-		var dest = votingaddress;
-		var fee = 10000;
-		var vfee = fee/decimal;
-		amount = parseInt(amount);
-		var message = "";
-		var version = "4";
-		var token = "STLG";
-		var date = Math.round(parseInt(Date.now())/1000)-1;
-		var txinfo = amount + "-" + date + "-"  + dest + "-" + fee + "-" + message + "-" + pubkey + "-" + token + "-" + version;
-		ipcRenderer.send('setToSign', txinfo);
-		var signature = ipcRenderer.sendSync('request', "sign");
-		document.getElementById('amount').value = "";
-		document.getElementById('sendbutton').classList.add("disabled");
-		if(confirm("Send " + amount/decimal + " " + token + " + " + vfee.toFixed(8) + " STLX on fees?"))
-		{
-			// receive address from main.js
-			var txvalues = JSON.stringify({'amount' : amount, 'fee' : fee, 'dest' : dest, 'pubkey' : pubkey, 'date' : date, 'version' : version, 'message' : message, 'signature' : signature, 'token' : token });
-			//var ldiv = document.getElementById('lastcommit');
-			//ldiv.innerHTML = mResult;
-			postData('https://node1.stlx.online/api/?q=transfer&symbol=' + token, txvalues)
-			  .then(data => {
-				//var obj = JSON.parse(data);
-				if(data.status == "ERROR")
-				{
-					alert("ERROR: " + data.response);
-				}
-				else
-				{
-					alert("SENT! Hash: " + data.response)
-				}
-				get_balance();
-			  });
-		}
-	}
-	
 	function get_balance()
 	{
 		fetch('https://node1.stlx.online/api/?q=getbalance&address=' + address)
@@ -174,6 +135,42 @@ a { color: #d0d0d0; }
 				document.getElementById('vquery').innerHTML = "<h4>" + obj.query + "</h4>";
 			}
 		});
+	}
+
+	function send()
+	{
+		var amount = parseFloat(document.getElementById('amount').value);
+		amount = amount*decimal;
+		var dest = votingaddress;
+		var fee = 300;
+		amount = parseInt(amount);
+		var message = "";
+		var version = "4";
+		var token = "STLG";
+		var date = Math.round(parseInt(Date.now())/1000)-1;
+		var txinfo = amount + "-" + date + "-"  + dest + "-" + fee + "-" + message + "-" + pubkey + "-" + token + "-" + version;
+		ipcRenderer.send('setToSign', txinfo);
+		var signature = ipcRenderer.sendSync('request', "sign");
+		document.getElementById('amount').value = "";
+		document.getElementById('sendbutton').classList.add("disabled");
+		if(confirm("Send " + amount/decimal + " " + token + " + " + (fee/decimal).toFixed(8) + " STLX on fees?"))
+		{
+			var txvalues = JSON.stringify({'amount' : amount, 'fee' : fee, 'dest' : dest, 'pubkey' : pubkey, 'date' : date, 'version' : version, 'message' : message, 'signature' : signature, 'token' : token });
+			postData('https://node1.stlx.online/api/?q=transfer', txvalues)
+			  .then(data => {
+				if(data.status == "ERROR")
+				{
+					alert("ERROR: " + data.response);
+				}
+				else
+				{
+					alert("SENT! Hash: " + data.response);
+					get_balance();
+					get_token_balance();
+					get_poll();
+				}
+			  });
+		}
 	}
 
 	function quit()

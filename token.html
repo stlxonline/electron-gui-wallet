@@ -80,7 +80,7 @@ a { color: #d0d0d0; }
 		amount = amount*decimal;
 		var dest = document.getElementById('dest').value;
 		amount = parseInt(amount);
-		var fee = 10000;
+		var fee = 300;
 		var message = "";
 		var version = "4";
 		var token = queryDict["token"];
@@ -98,7 +98,7 @@ a { color: #d0d0d0; }
 			var txvalues = JSON.stringify({'amount' : amount, 'fee' : fee, 'dest' : dest, 'pubkey' : pubkey, 'date' : date, 'version' : version, 'message' : message, 'signature' : signature, 'token' : token });
 			//var ldiv = document.getElementById('lastcommit');
 			//ldiv.innerHTML = mResult;
-			postData('https://node1.stlx.online/api/?q=transfer&symbol=' + token, txvalues)
+			postData('https://node1.stlx.online/api/?q=transfer', txvalues)
 			  .then(data => {
 				//var obj = JSON.parse(data);
 				if(data.status == "ERROR")
@@ -107,9 +107,10 @@ a { color: #d0d0d0; }
 				}
 				else
 				{
-					alert("SENT! Hash: " + data.response)
+					alert("SENT! Hash: " + data.response);
+					get_balance();
+					get_token_balance();
 				}
-				get_balance();
 			  });
 		}
 	}
@@ -140,7 +141,7 @@ a { color: #d0d0d0; }
 			var obj = JSON.parse(response);
 			for (const [key, value] of Object.entries(obj.tokensbalance)) {
 			  if(key == queryDict["token"])
-			  document.getElementById('tokenbalance').innerHTML = value[1]/decimal + ' ' + queryDict["token"];
+			  document.getElementById('tokenbalance').innerHTML = value[1]/value[2] + ' ' + queryDict["token"];
 			}
 		});
 	}

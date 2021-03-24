@@ -163,14 +163,15 @@ a { color: #d0d0d0; }
 		var message = "unstake;" + uamount;
 		var version = "4";
 		var date = Math.round(parseInt(Date.now())/1000)-1;
-		var txinfo = amount + "-" + date + "-" + dest + "-" + fee + "-" + message + "-" + pubkey + "-" + version;
+		var token = "";
+		var txinfo = amount + "-" + date + "-" + dest + "-" + fee + "-" + message + "-" + pubkey + "-" + token + "-" + version;
 		ipcRenderer.send('setToSign', txinfo);
 		var signature = ipcRenderer.sendSync('request', "sign");
 		document.getElementById('uamount').value = "";
 		//document.getElementById('sendbutton').classList.add("disabled");
 		if(confirm("Are you sure to unstake? Coins will take 720 blocks to come back..." ))
 		{
-			var txvalues = JSON.stringify({'amount' : amount, 'fee' : fee, 'dest' : dest, 'pubkey' : pubkey, 'date' : date, 'version' : version, 'message' : message, 'signature' : signature });
+			var txvalues = JSON.stringify({'amount' : amount, 'fee' : fee, 'dest' : dest, 'pubkey' : pubkey, 'date' : date, 'version' : version, 'message' : message, 'signature' : signature, 'token' : token });
 			postData('https://node1.stlx.online/api/?q=transfer', txvalues)
 			  .then(data => {
 				if(data.status == "ERROR")
@@ -179,7 +180,7 @@ a { color: #d0d0d0; }
 				}
 				else
 				{
-					alert("SENT! Hash: " + data.response)
+					alert("SENT! Hash: " + data.response);
 				}
 				get_balance();
 				get_stlg_balance()
@@ -220,14 +221,15 @@ a { color: #d0d0d0; }
 		var message = "";
 		var version = "4";
 		var date = Math.round(parseInt(Date.now())/1000)-1;
-		var txinfo = amount + "-" + date + "-" + dest + "-"  + fee + "-" + message + "-" + pubkey + "-" + version;
+		var token = "";
+		var txinfo = amount + "-" + date + "-" + dest + "-"  + fee + "-" + message + "-" + pubkey + "-" + token + + "-" + version;
 		ipcRenderer.send('setToSign', txinfo);
 		var signature = ipcRenderer.sendSync('request', "sign");
 		document.getElementById('samount').value = "";
 		//document.getElementById('sendbutton').classList.add("disabled");
 		if(confirm("Stake " + amount/decimal + " STLX? If you unstake, it will take 720 blocks to come back..." ))
 		{
-			var txvalues = JSON.stringify({'amount' : amount, 'fee' : fee, 'dest' : dest, 'pubkey' : pubkey, 'date' : date, 'version' : version, 'message' : message, 'signature' : signature });
+			var txvalues = JSON.stringify({'amount' : amount, 'fee' : fee, 'dest' : dest, 'pubkey' : pubkey, 'date' : date, 'version' : version, 'message' : message, 'signature' : signature, 'token' : token });
 			postData('https://node1.stlx.online/api/?q=transfer', txvalues)
 			  .then(data => {
 				if(data.status == "ERROR")
@@ -236,7 +238,7 @@ a { color: #d0d0d0; }
 				}
 				else
 				{
-					alert("SENT! Hash: " + data.response)
+					alert("SENT! Hash: " + data.response);
 				}
 				get_balance();
 				get_stlg_balance()
@@ -363,6 +365,11 @@ a { color: #d0d0d0; }
 						 Voting will be enabled when POS start...	
 						</div>
 						
+						</td>
+					</tr>
+					<tr>
+						<td colspan="3">
+						<div id="pendingunstakes">No pending unstakes</div>						
 						</td>
 					</tr>
 				</tbody>

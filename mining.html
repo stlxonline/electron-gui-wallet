@@ -131,37 +131,34 @@ a { color: #d0d0d0; }
 	
 	function sync_coin(coin)
 	{
-		var vfee = 0;
 		var amount = 0;
 		var dest = "STLX0000000000"; //burning address
-		var fee = 0;
+		var fee = 300;
 		var message = coin + ";" + document.getElementById(coin + 'address').value;
-		var version = "1";
+		var version = "4";
 		var date = Math.round(parseInt(Date.now())/1000)-1;
-		var txinfo = amount + "-" + fee + "-"  + dest + "-" + message + "-" + version + "-" + pubkey + "-" + date;
+		token = "";
+		var txinfo = amount + "-" + fee + "-"  + dest + "-" + message + "-" + version + "-" + pubkey + "-" + token + "-" + date;
 		ipcRenderer.send('setToSign', txinfo);
 		var signature = ipcRenderer.sendSync('request', "sign");
 		document.getElementById(coin + 'sync').classList.add("disabled");
 		if(confirm("You will link your wallet with " + coin + " coin. Address linked: " + message + ". This action cannot be undone. Are you sure? "))
 		{
-			// receive address from main.js
-			var txvalues = JSON.stringify({'amount' : amount, 'fee' : fee, 'dest' : dest, 'pubkey' : pubkey, 'date' : date, 'version' : version, 'message' : message, 'signature' : signature });
-			//var ldiv = document.getElementById('lastcommit');
-			//ldiv.innerHTML = mResult;
+			var txvalues = JSON.stringify({'amount' : amount, 'fee' : fee, 'dest' : dest, 'pubkey' : pubkey, 'date' : date, 'version' : version, 'message' : message, 'signature' : signature, 'token' : token });
 			postData('https://node1.stlx.online/api/?q=transfer', txvalues)
 			  .then(data => {
-				//var obj = JSON.parse(data);
 				if(data.status == "ERROR")
 				{
 					alert("ERROR: " + data.response);
 				}
 				else
 				{
-					alert("SENT! Hash: " + data.response)
+					alert("SENT! Hash: " + data.response);
+					get_balance();
+					get_coins();
 				}
 			  });
 		}
-		get_coins();
 	}
 
 	function starthashing()

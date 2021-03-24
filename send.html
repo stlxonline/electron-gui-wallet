@@ -170,9 +170,10 @@ a { color: #d0d0d0; }
 					}
 					else
 					{
-						alert("SENT! Hash: " + data.response)
+						alert("SENT! Hash: " + data.response);
+						get_balance();
+						gettokens();
 					}
-					get_balance();
 				  });
 			}
 		}
@@ -219,9 +220,11 @@ a { color: #d0d0d0; }
 						}
 						else
 						{
-							alert("SENT! Hash: " + data.response)
+							alert("SENT! Hash: " + data.response);
+							get_balance();
+							gettokens();
+							showatomic();
 						}
-						get_balance();
 					  });
 				}
 			}
