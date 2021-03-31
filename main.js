@@ -370,6 +370,9 @@ function createWindow () {
 	  })
 	  
 	  //win.setResizable(false);
+	  fs.unlink(temppassfile,function(err){
+			if(err) return console.log(err);
+	   });  
 
 	  win.setMenuBarVisibility(false)
 	  win.maximize();
