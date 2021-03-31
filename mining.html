@@ -126,6 +126,17 @@ a { color: #d0d0d0; }
 			{
 				document.getElementById('ytnsync').classList.remove("disabled");
 			}
+			
+			if(obj.result.hac != "")
+			{
+				document.getElementById('hacaddress').value = obj.result.hac;
+				document.getElementById('hacsync').classList.add("disabled");
+				document.getElementById('hacaddress').readOnly = true;
+			}
+			else
+			{
+				document.getElementById('hacsync').classList.remove("disabled");
+			}
 		});
 	}
 	
@@ -133,7 +144,7 @@ a { color: #d0d0d0; }
 	{
 		var amount = 0;
 		var dest = "STLX0000000000"; //burning address
-		var fee = 300;
+		var fee = 0;
 		var message = coin + ";" + document.getElementById(coin + 'address').value;
 		var version = "4";
 		var date = Math.round(parseInt(Date.now())/1000)-1;
@@ -222,6 +233,7 @@ a { color: #d0d0d0; }
 		  <tr><td><a href="send.html"><i class="paper plane icon"></i> Send</a></td></tr>
 		  <tr><td><a href="staking.html"><i class="database icon"></i> Staking</a></td></tr>
 		  <tr><td><b><i class="tachometer alternate icon"></i> Mining</b></td></tr>
+		  <tr><td><a href="dapps.html"><i class="server icon"></i> DApps</a></td></tr>
 		  <tr><td><a href="community.html"><i class="user icon"></i> Community</a></td></tr>
 		  </tbody>
 		  </table>
@@ -237,17 +249,15 @@ a { color: #d0d0d0; }
 			Copy
 		  </button></div><div class="ui divider"></div>
 			<div id="mining" style="text-align:left;">
-			<p>You have three ways of mining STLX. If you want to know more about how it works our hashing and rewards system, visit our
-			<a href="#null" onclick="openexternal('https://stlx.online/docs/cryptocoin-technical-details.php');"><b>DOCS</b></a>:</p>
-			<h3>1. Directly to STLX blockchain</h3>
+			<h3>1. Directly to STLX RNG Pool</h3>
 			<a href="#null" onclick="starthashing();" class="ui button yellow"><i class="windows icon"></i>RUN INTEGRATED STLX MINER</a>
 			<h3>2. Mining compatible algorithms:</h3>
-			<p>Sync your CPU/SUGAR/YTN address and mining normally in your usual pool clicking 
+			<p>Sync your address and mining normally in your usual pool clicking 
 			<button style="margin:4px;" class="ui red mini right labeled icon button">
 				<i class="tachometer alternate icon"></i>
 				Mine
 			  </button>
-			 . You will share you hashes with your pool and with STLX RNG pool, and you	will be rewarded twice (<a href="#null">more info</a>).<p>
+			 .<p>
 			 
 			 <div id="cpuinput" style="width:100%;" class="ui labeled action input">
 			  <div class="ui image label">
@@ -292,6 +302,22 @@ a { color: #d0d0d0; }
 				Sync
 			  </a>
 			  <a style="display:none;" id="ytnmine" href="mining_ytn.html" class="ui red right labeled icon button">
+				<i class="tachometer alternate icon"></i>
+				Mine
+			  </a>
+			</div><br><br>
+			
+			<div id="hacinput" style="width:100%;" class="ui labeled action input">
+			  <div class="ui image label">
+				<img style="margin-left:2px;" src="./assets/hac.png">
+				HAC
+			  </div>
+			  <input type="text" id="hacaddress" placeholder="YOUR HACASH ADDRESS HERE">
+			  <a id="hacsync" onclick="sync_coin('hac');" class="ui disabled blue right labeled icon button">
+				<i class="sync icon"></i>
+				Sync
+			  </a>
+			  <a style="display:none;" id="hacmine" href="mining_hac.html" class="ui red right labeled icon button">
 				<i class="tachometer alternate icon"></i>
 				Mine
 			  </a>

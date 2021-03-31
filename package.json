@@ -1,6 +1,6 @@
 {
   "name": "stlx-wallet",
-  "version": "0.0.7",
+  "version": "0.0.9",
   "description": "GUI Wallet for STLX coin",
   "main": "main.js",
   "dependencies": {

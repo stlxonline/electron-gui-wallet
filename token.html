@@ -36,6 +36,7 @@ a { color: #d0d0d0; }
 </head>
   <script>
 	const decimal = 100000000;
+	var tokendecimal = 100000000;
 	const {ipcRenderer} = require('electron');
 	// send password to main.js 
 	var address = ipcRenderer.sendSync('request', "address" );
@@ -77,7 +78,8 @@ a { color: #d0d0d0; }
 	function send()
 	{
 		var amount = parseFloat(document.getElementById('amount').value);
-		amount = amount*decimal;
+		var tokendecimal = document.getElementById('tokendecimal').value;
+		amount = amount*tokendecimal;
 		var dest = document.getElementById('dest').value;
 		amount = parseInt(amount);
 		var fee = 300;
@@ -88,19 +90,15 @@ a { color: #d0d0d0; }
 		var txinfo = amount + "-" + date + "-"  + dest + "-" + fee + "-" + message + "-" + pubkey + "-" + token + "-" + version;
 		ipcRenderer.send('setToSign', txinfo);
 		var signature = ipcRenderer.sendSync('request', "sign");
-		alert(signature);
 		document.getElementById('amount').value = "";
 		document.getElementById('dest').value = "";
 		document.getElementById('sendbutton').classList.add("disabled");
-		if(confirm("Send " + amount/decimal + " " + token + " + " + vfee.toFixed(8) + " STLX on fees?"))
+		
+		if(confirm("Send " + amount/tokendecimal + " " + token + " + " + (fee/decimal).toFixed(8) + " STLX on fees?"))
 		{
-			// receive address from main.js
 			var txvalues = JSON.stringify({'amount' : amount, 'fee' : fee, 'dest' : dest, 'pubkey' : pubkey, 'date' : date, 'version' : version, 'message' : message, 'signature' : signature, 'token' : token });
-			//var ldiv = document.getElementById('lastcommit');
-			//ldiv.innerHTML = mResult;
 			postData('https://node1.stlx.online/api/?q=transfer', txvalues)
 			  .then(data => {
-				//var obj = JSON.parse(data);
 				if(data.status == "ERROR")
 				{
 					alert("ERROR: " + data.response);
@@ -141,7 +139,10 @@ a { color: #d0d0d0; }
 			var obj = JSON.parse(response);
 			for (const [key, value] of Object.entries(obj.tokensbalance)) {
 			  if(key == queryDict["token"])
-			  document.getElementById('tokenbalance').innerHTML = value[1]/value[2] + ' ' + queryDict["token"];
+			  {
+				document.getElementById('tokenbalance').innerHTML = value[1]/value[2] + ' ' + queryDict["token"];
+				document.getElementById('tokendecimal').value = value[2];
+			  }
 			}
 		});
 	}
@@ -227,6 +228,7 @@ a { color: #d0d0d0; }
 		  <tr><td><a href="send.html"><i class="paper plane icon"></i> Send</a></td></tr>
 		  <tr><td><a href="staking.html"><i class="database icon"></i> Staking</a></td></tr>
 		  <tr><td><a href="mining.html"><i class="tachometer alternate icon"></i> Mining</a></td></tr>
+		  <tr><td><a href="dapps.html"><i class="server icon"></i> DApps</a></td></tr>
 		  <tr><td><a href="community.html"><i class="user icon"></i> Community</a></td></tr>
 		  </tbody>
 		  </table>
@@ -249,6 +251,7 @@ a { color: #d0d0d0; }
 			<div id="send" style="display:none">
 			 <div class="ui tiny input" style="width:100%;"><input type="text" id="dest" placeholder="Destination address..." ></div><br><br>
 			 <div class="ui tiny input" style="width:100%;"><input type="text" id="amount" placeholder="Token amount..."></div><br><br>
+			 <input type="hidden" id="tokendecimal" value="100000000">
 			<div class="ui buttons">
 			  <button onclick="setbalance(25);" class="ui button">25%</button>
 			  <button onclick="setbalance(50);" class="ui button">50%</button>

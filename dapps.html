@@ -39,17 +39,12 @@ a { color: #d0d0d0; }
 	const {ipcRenderer} = require('electron');
 	// send password to main.js 
 	var address = ipcRenderer.sendSync('request', "address" );
-	var miningcommand = "";
-	
+
 	function copytoclipboard() {
-	  /* Get the text field */
 	  var copyText = document.getElementById("address");
-	  /* Select the text field */
 	  copyText.select();
-	  copyText.setSelectionRange(0, 99999); /* For mobile devices */
-	  /* Copy the text inside the text field */
+	  copyText.setSelectionRange(0, 99999);
 	  document.execCommand("copy");
-	  /* Alert the copied text */
 	  alert("Copied the text: " + copyText.value);
 	}
 	
@@ -63,59 +58,42 @@ a { color: #d0d0d0; }
 			document.getElementById('locked').innerHTML = obj.locked/decimal + " STLX";
 		});
 	}
-	
-	function get_coins()
+
+	function quit()
 	{
-		fetch('https://node1.stlx.online/api/?q=getcoinaddresses&address=' + address)
-		.then(response => response.text())
-		.then((response) => {
-			var obj = JSON.parse(response);
-			if(obj.result.sugar != "")
-			{
-				document.getElementById('sugaraddress').innerHTML = obj.result.sugar;
-				document.getElementById('sugarsync').classList.add("disabled");
-				document.getElementById("sugarsync").style.display = "none";
-				document.getElementById("sugarmine").style.display = "";
-			}
-			else
-			{
-				document.getElementById('sugarsync').classList.remove("disabled");
-			}
-		});
+		var mining = ipcRenderer.sendSync('request', "exit");
+		return;
+	}
+	
+	function installprotocol()
+	{
+		var mining = ipcRenderer.sendSync('request', "installprotocol");
+		return;
+	}
+	
+	function editregfile()
+	{
+		var mining = ipcRenderer.sendSync('request', "editregfile");
+		return;
 	}
 
 	setInterval(function() {
 		if(document.getElementById('address').value != address)
 		{
 			document.getElementById('address').value = address;
+			get_transactions();
 			get_balance();
-			get_coins();
 		}
-		miningcommand = "-a yespowersugar -o stratum+tcp://" + document.getElementById('pool').value + " -u " + document.getElementById('sugaraddress').innerHTML + " -t " + document.getElementById('threads').value + " " + document.getElementById('extraopts').value;
-		ipcRenderer.send('setToMine', miningcommand);
-		document.getElementById('mcommand').value = miningcommand;
 	}, 250);
-		
-	function startmining()
-	{
-		var mining = ipcRenderer.sendSync('request', "startmining");
-		return;
-	}
-		
+
+	get_balance();
 	setInterval(function() {
 		get_balance();
-		get_coins();
 	}, 30000);
 
-		function openexplorer() {
-		  require("electron").shell.openExternal("https://1explorer.sugarchain.org/address/" + document.getElementById('sugaraddress').innerHTML);
-		}
-
-function quit()
-	{
-		var mining = ipcRenderer.sendSync('request', "exit");
-		return;
-	}
+	function openexternal(link) {
+  require("electron").shell.openExternal(link);
+}
   </script>
 
   </head>
@@ -143,14 +121,14 @@ function quit()
 		  <tr><td><a href="transactions.html"><i class="envelope icon"></i> Transactions</a></td></tr>
 		  <tr><td><a href="send.html"><i class="paper plane icon"></i> Send</a></td></tr>
 		  <tr><td><a href="staking.html"><i class="database icon"></i> Staking</a></td></tr>
-		  <tr><td><b><i class="tachometer alternate icon"></i> Mining</b></td></tr>
-		  <tr><td><a href="dapps.html"><i class="server icon"></i> DApps</a></td></tr>
+		  <tr><td><a href="mining.html"><i class="tachometer alternate icon"></i> Mining</a></td></tr>
+		  <tr><td><b><i class="server icon"></i> DApps</b></td></tr>
 		  <tr><td><a href="community.html"><i class="user icon"></i> Community</a></td></tr>
 		  </tbody>
 		  </table>
 		  </div>
 		  <div class="twelve wide column">
-		  <div style="text-align: right;margin-bottom:16px;font-size:16px;">
+			<div style="text-align: right;margin-bottom:16px;font-size:16px;">
 			<a href="keys.html"><i class="key icon"></i></a>
 			<a href="help.html"><i class="help icon"></i></a>
 			<a href="#null" onclick="quit();"><i class="sign out alternate icon"></i></a>
@@ -159,71 +137,40 @@ function quit()
 			<i class="clone icon"></i>
 			Copy
 		  </button></div><br><br>
-			<div id="mining" style="text-align:left;">
-			<img class="ui image tiny centered circular" src="./assets/sugar.png" />
-			<div style="text-align:center"><h3><a href="#null" onclick="openexplorer();" id="sugaraddress"></a></h3></div><br><br>
-			<table style="width:100%">
-			<tr>
-			<td style="width:50%">
-			<p><b>SELECT YOUR MINING POOL:</b></p>
-			<select id="pool" style="width:100%;" class="ui search dropdown">
-			  <option value="stratum-eu.rplant.xyz:17042">pool.rplant.xyz</option>
-			  <option value="sugar.ss.dxpool.com:3366">dxpool.com</option>
-			  <option value="pool.bullcpupool.com:3333">bullcpupool.com</option>
-			  <option value="139.129.229.26:7021">lepool.com.cn</option>
-			  <option value="1pool.sugarchain.org:5555">1pool.sugarchain.org</option>
-			  <option value="reallypool.ru:3032">reallypool.ru</option>
-			  <option value="2pool.sugarchain.org:5555">2pool.sugarchain.org</option>
-			  <option value="eu.poolmine.xyz:6238">poolmine.xyz</option>
-			</select>
-			</td>
-			<td style="width:50%">
-			<p><b>SELECT NUMBER OF THREADS:</b></p>
-			<select id="threads" style="width:100%;" class="ui search dropdown">
-			  <option value="1">1 thread</option>
-			  <option value="2">2 threads</option>
-			  <option value="3">3 threads</option>
-			  <option value="4">4 threads</option>
-			  <option value="5">5 threads</option>
-			  <option value="6">6 threads</option>
-			  <option value="7">7 threads</option>
-			  <option value="8">8 threads</option>
-			  <option value="12">12 threads</option>
-			  <option value="16">16 threads</option>
-			  <option value="20">20 threads</option>
-			  <option value="24">24 threads</option>
-			  <option value="32">32 threads</option>
-			  <option value="64">64 threads</option>
-			  <option value="128">128 threads</option>
-			</select>
-			</td>
-			</tr>
-			<tr>
-			<td colspan="2">
-			<br>
-			<p><b>EXTRA OPTIONS (password, workerid, etc...). THIS IS OPTIONAL!</b></p>
-			<div style="width:100%;" class="ui input">
-				<input type="text" id="extraopts" placeholder="For example: -p password.workerID">
-			</div>
-			</td>
-			</tr>
-			<tr>
-			<td colspan="2">
-			<br>
-			<div style="width:100%;" class="ui right mini labeled input">
-			  <label for="mcommand" class="ui label">Mining command</label>
-			  <input type="text" readonly value="" id="mcommand">
-			</div>
-			</td>
-			</tr>
-			<tr>
-			<td colspan="2">
-			<br>
-			<div style="text-align:center"><a href="#null" onclick="startmining();" class="ui button green"><i class="tachometer alternate icon"></i>START MINING</a>
-			<a href="./mining.html" class="ui button red"><i class="left arrow icon"></i>BACK</a></div>
-			</td>
-			</tr>
-			</table>		  
+			<div style="text-align:left;" id="help">
+			  <h3><i class="server icon"></i> Decentralized Apps</h3>
+			  <div class="ui divider"></div>
+			    <div class="ui card inverted">
+					<div class="content">
+					  <img class="right floated tiny ui image" src="assets/ctlu.png">
+					  <div class="header">
+						Cthulu DEX
+					  </div>
+					  <div class="meta">
+						https://cthulu.finance
+					  </div>
+					  <div class="description">
+						Decentralized exchange, Pancakeswap clone (and more) over STLX Blockchain
+					  </div>
+					</div>
+					<div class="extra content">
+					  <div class="ui two buttons">
+						<div onclick="openexternal('https://cthulu.finance');" class="ui basic green button">Visit</div>
+					  </div>
+					</div>
+				  </div>
+				  <h3><i class="sitemap icon"></i> stlx Protocol</h3>
+			  <div class="ui divider"></div>
+			    <p>
+				For using decentralized applications, you need to register stlx protocol into your Windows Registry. Click <span class="ui button green mini"><i class="server icon"></i> Install stlx protocol</span> for
+				install or <span class="ui button blue mini"><i class="edit icon"></i> View file</span> for inspect the .reg file.
+				</p>
+				<div style="text-align:center"><a href="#null" onclick="installprotocol();" class="ui button green"><i class="server icon"></i> Install stlx protocol</a>
+					<a href="#null" onclick="editregfile();" class="ui button blue"><i class="edit icon"></i> View file</a></div>
+				</div>
+			</div><br><br>
+			
+			</div><br><br>
 		  </div>
 		</div>
 	</div>

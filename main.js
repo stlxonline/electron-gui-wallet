@@ -2,7 +2,10 @@ const { app, BrowserWindow, ipcMain } = require('electron')
 const { generateKeyPairSync } = require('crypto');
 const { exec, spawn } = require('child_process');
 const fs = require('fs')
-const path = './wallets/stlx.wallet'
+const path = require('path').dirname(require.main.filename) + '/../../wallets/stlx.wallet'
+const regfile = require('path').dirname(require.main.filename) + '/../../stlx.reg'
+const temppassfile = require('path').dirname(require.main.filename) + '/../../tmpp.txt'
+const pathurl = require('path').dirname(require.main.filename).replace("\\resources\\app", "").replaceAll("\\", "\\\\");
 const bs58 = require('bs58')
 global.addr = ""
 global.pbkey = ""
@@ -12,6 +15,40 @@ global.tobemined = ""
 global.pvkey = ""
 global.b58pvkey = ""
 global.rawallet = ""
+global.txargs = ""
+global.iswallet = 0
+global.tmppass = ""
+
+var regkey = 'REGEDIT4'
+regkey = regkey + "\n"
+regkey = regkey + "\n"
+regkey = regkey +'[HKEY_CLASSES_ROOT\\stlx]'
+regkey = regkey + "\n"
+regkey = regkey +'@="URL:stlx"'
+regkey = regkey + "\n"
+regkey = regkey + '"URL Protocol"=""'
+regkey = regkey + "\n"
+regkey = regkey + "\n"
+regkey = regkey +'[HKEY_CLASSES_ROOT\\stlx\\DefaultIcon]'
+regkey = regkey + "\n"
+regkey = regkey +'@="\\"' + pathurl + '\\\\stlx-wallet.exe\\""'
+regkey = regkey + "\n"
+regkey = regkey + "\n"
+regkey = regkey +'[HKEY_CLASSES_ROOT\\stlx\\shell]'
+regkey = regkey + "\n"
+regkey = regkey + "\n"
+regkey = regkey +'[HKEY_CLASSES_ROOT\\stlx\\shell\\open]'
+regkey = regkey + "\n"
+regkey = regkey + "\n"
+regkey = regkey +'[HKEY_CLASSES_ROOT\\stlx\\shell\\open\\command]'
+regkey = regkey + "\n"
+regkey = regkey +'@="\\"' + pathurl + '\\\\stlx-wallet.exe\\" \\"%1\\""'
+
+fs.writeFile(regfile, regkey, function(err) {
+	if(err) {
+		return console.log(err);
+	}
+}); 
 
 // receive message from create.html 
 ipcMain.on('setToSign', (event, arg) => {
@@ -24,6 +61,17 @@ ipcMain.on('setToMine', (event, arg) => {
 	tobemined = arg;
 	// send message to create.html
 	event.sender.send('setToMine-reply', "done");
+});
+
+ipcMain.on('setTMPPass', (event, arg) => {
+	pass = arg;
+	fs.writeFile(temppassfile, pass, function(err) {
+		if(err) {
+			return console.log(err);
+		}
+	});
+	// send message to create.html
+	event.sender.send('setTMPPass-reply', "done");
 });
 
 // receive message from create.html 
@@ -244,9 +292,27 @@ ipcMain.on('request', (event, arg) => {
 		exec('start ./stlxhasher/hasher.exe ' + addr)
 		event.returnValue = "ok";
 	}
+	if(arg == "installprotocol")
+	{
+		exec('start regedit.exe /S ' + regfile)
+		event.returnValue = "ok";
+	}
+	if(arg == "editregfile")
+	{
+		exec('start notepad.exe ' + regfile)
+		event.returnValue = "ok";
+	}
 	if(arg == "address")
 	{
 		event.returnValue = addr;
+	}
+	if(arg == "txargs")
+	{
+		var parg = process.argv[1];
+		parg = parg.split(":");
+		if(parg.length == 2)
+			txargs = parg[1];
+		event.returnValue = txargs;
 	}
 	if(arg == "pubkey")
 	{
@@ -266,40 +332,84 @@ ipcMain.on('request', (event, arg) => {
 	}
 });
 
-
 try {
   if (fs.existsSync(path)) {
-    var iswallet = 1;
+    iswallet = 1;
+	var parg = process.argv[1];
+	parg = parg.split(":");
+	if(parg.length == 2)
+	{
+		var carg = parg[1].split("/");
+		if(carg[0] == "signtx")
+		{
+			iswallet = 2;
+		}
+		else
+		{
+			app.quit();
+		}
+	}
   }
   else {
-	  var iswallet = 0;
+	  iswallet = 0;
   }
 } catch(err) {
   console.error(err)
 }
 
-function createWindow () {
-  const win = new BrowserWindow({
-    width: 1024,
-    height: 700,
-	minWidth:500,
-    webPreferences: {
-      nodeIntegration: true
-    }
-  })
-  
-  //win.setResizable(false);
-
-  win.setMenuBarVisibility(false)
-  
-  win.maximize();
-  
+function createWindow () {  
   if(iswallet == 1)
   {
+	  const win = new BrowserWindow({
+		width: 1024,
+		height: 700,
+		minWidth:500,
+		webPreferences: {
+		  nodeIntegration: true
+		}
+	  })
+	  
+	  //win.setResizable(false);
+
+	  win.setMenuBarVisibility(false)
+	  win.maximize();
 	  win.loadFile('index.html')
+  }
+  else if(iswallet == 2)
+  {
+	  const win = new BrowserWindow({
+		width: 500,
+		height: 700,
+		minWidth:500,
+		webPreferences: {
+		  nodeIntegration: true
+		}
+	  })
+	  
+	  //win.setResizable(false);
+	  if (fs.existsSync(temppassfile))
+			tmppass = fs.readFileSync(temppassfile)
+	  else
+		  tmppass = "";
+	  
+	  win.setMenuBarVisibility(false)
+	  win.loadURL(require('path').dirname(require.main.filename) + '/sindex.html?tmpp=' + tmppass)
   }
   else
   {
+	  const win = new BrowserWindow({
+		width: 1024,
+		height: 700,
+		minWidth:500,
+		webPreferences: {
+		  nodeIntegration: true
+		}
+	  })
+	  
+	  //win.setResizable(false);
+
+	  win.setMenuBarVisibility(false)
+	  win.maximize();
 	  win.loadFile('create.html')
   }
 }

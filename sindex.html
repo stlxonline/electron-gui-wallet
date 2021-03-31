@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset="utf-8" />
+    <title>STLX GUI Wallet</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.js" integrity="sha512-dqw6X88iGgZlTsONxZK9ePmJEFrmHwpuMrsUChjAw1mRUhUITE5QU9pkcSox+ynfLhL15Sv2al5A0LVyDCmtUw==" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.css" integrity="sha512-8bHTC73gkZ7rZ7vpqUQThUDhqcNFyYi2xgDgPDHc+GXVGHXq+xPjynxIopALmOPqzo9JZj0k6OqqewdGO3EsrQ==" crossorigin="anonymous" />
+<style>
+body {
+
+  margin: 0;
+  padding: 0;
+  color: #fff;
+  #µbackground: url("./assets/bg2.png") repeat;
+  background:
+    -webkit-linear-gradient(315deg, hsla(237.66, 93.62%, 43.78%, 1) 0%, hsla(237.66, 93.62%, 43.78%, 0) 70%),
+    -webkit-linear-gradient(65deg, hsla(51.7, 97.61%, 42.16%, 1) 10%, hsla(51.7, 97.61%, 42.16%, 0) 80%),
+    -webkit-linear-gradient(135deg, hsla(214.13, 91.53%, 42.83%, 1) 15%, hsla(214.13, 91.53%, 42.83%, 0) 80%),
+    -webkit-linear-gradient(205deg, hsla(346.13, 97.46%, 41.45%, 1) 100%, hsla(346.13, 97.46%, 41.45%, 0) 70%);
+  background:
+    linear-gradient(135deg, hsla(237.66, 93.62%, 43.78%, 1) 0%, hsla(237.66, 93.62%, 43.78%, 0) 70%),
+    linear-gradient(25deg, hsla(51.7, 97.61%, 42.16%, 1) 10%, hsla(51.7, 97.61%, 42.16%, 0) 80%),
+    linear-gradient(315deg, hsla(214.13, 91.53%, 42.83%, 1) 15%, hsla(214.13, 91.53%, 42.83%, 0) 80%),
+    linear-gradient(245deg, hsla(346.13, 97.46%, 41.45%, 1) 100%, hsla(346.13, 97.46%, 41.45%, 0) 70%);
+  padding: 20px;
+  overflow-x: hidden;
+
+}
+.text {
+	text-transform: uppercase;
+	background: linear-gradient(to right, #fafafa 0%, #787878 100%);
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+}
+
+*, *::after, *::before {
+	-webkit-user-select: none;
+	-webkit-user-drag: none;
+	-webkit-app-region: no-drag;
+}
+
+.ui.tra.inverted.input > input {
+    color: #fff;
+    opacity: 0.4;
+	color:#333;
+}
+
+.ui.tra.inverted.input > input:focus {
+    opacity: 0.8;
+}
+</style>
+	<script>
+	var queryDict = {};
+	location.search.substr(1).split("&").forEach(function(item) {queryDict[item.split("=")[0]] = item.split("=")[1]});
+	var tmppass = queryDict["tmpp"];
+	
+	function sendpass() {
+		let passwd = document.getElementById("passwd").value;
+		if(passwd.length < 8)
+		{
+			document.getElementById('wmessage').innerHTML = "Password must be at least 8 characters";
+			document.getElementById("smessage").classList.add('red');
+		}
+		else
+		{
+			const {ipcRenderer} = require('electron');
+			// send password to main.js 
+			ipcRenderer.send('index-send', passwd );
+			// receive address from main.js
+			ipcRenderer.on('index-reply', (event, arg) => {
+			  if(arg == "opened")
+			  {
+				ipcRenderer.sendSync('setTMPPass', passwd);
+				window.location.href = "ssend.html";
+			  }
+			  if(arg == "bad_decrypt")
+			  {
+				document.getElementById('wmessage').innerHTML = "Can't decrypt your wallet. Incorrect password?";
+				document.getElementById("smessage").classList.add('red');
+			  }
+			})
+		}
+		
+	}
+	</script>
+
+  </head>
+  <body style="text-align:center;">
+    <div style="position:absolute;top:50%;left:50%;margin-right:-50%;transform: translate(-50%, -50%);" class="ui container">
+		<div class="text" style="margin-bottom:16px;font-size:32px;padding:8px;"><img class="ui centered tiny circular image" src="./assets/logo.png" /></div>
+		<span id="smessage" class="ui label"><i class="lock icon"></i> <span id="wmessage">Wallet found! Please, type your password for decrypt it.</span></span><br><br>
+		<div style="width:85%;" id="dpasswd" class="ui tra inverted input"><input id="passwd" type="password" placeholder="Your password...">
+		<script>
+		document.getElementById("passwd").value = tmppass;
+		</script>
+		</div><br><br>
+		<a href="#" onclick="sendpass();" id="submit" class="ui green button"><i class="lock open icon"></i> Decrypt wallet</a>
+		
+	</div>
+</body>
+</html>
