@@ -37,10 +37,11 @@ a { color: #d0d0d0; }
   <script>
 	const decimal = 100000000;
 	const {ipcRenderer} = require('electron');
-	// send password to main.js 
+	// send password to main.js
 	var address = ipcRenderer.sendSync('request', "address" );
 	var pubkey = ipcRenderer.sendSync('request', "pubkey" );
-	
+  var votingaddress = "";
+
 	async function postData(url = '', data = {}) {
 	  // Default options are marked with *
 	  const response = await fetch(url, {
@@ -92,7 +93,7 @@ a { color: #d0d0d0; }
 	  }
 	  return Math.floor(seconds) + " seconds ago";
 	}
-	
+
 	function copytoclipboard() {
 	  /* Get the text field */
 	  var copyText = document.getElementById("address");
@@ -104,7 +105,7 @@ a { color: #d0d0d0; }
 	  /* Alert the copied text */
 	  alert("Copied the text: " + copyText.value);
 	}
-	
+
 	function get_balance()
 	{
 		fetch('https://node1.stlx.online/api/?q=getbalance&address=' + address)
@@ -122,7 +123,13 @@ a { color: #d0d0d0; }
 		amnt = parseFloat(parseFloat(amnt)*value/100);
 		document.getElementById(dest).value = amnt.toFixed(8);
 	}
-	
+
+  function setvotingaddress(address)
+	{
+		votingaddress = address;
+		get_validators();
+	}
+
 	function showopt(opt)
 	{
 		if(opt == 1)
@@ -210,6 +217,68 @@ a { color: #d0d0d0; }
 		});
 	}
 
+  function get_validators()
+	{
+		fetch('https://node1.stlx.online/api/?q=getvalidators')
+		.then(response => response.text())
+		.then((response) => {
+			var obj = JSON.parse(response);
+      var optl = obj.result.length;
+      var c = '';
+      c = c + '<br>Choose your prefered validator and vote:<br><table class="ui table inverted"><thead><th>Select</th><th>Address</th><th>Name</th><th>Votes</th><th>APY</th></thead><tbody>';
+      for(var x=0;x<optl;x++)
+      {
+        if(obj.result[x][0] == votingaddress)
+        {
+          c = c + '<tr><td style="width:10%;text-align:center;"><a href="#null" class="ui mini button green" id="vote' + x + '">SELECT</a></td>';
+        }
+        else {
+          c = c + '<tr><td style="width:10%;text-align:center;"><a onclick="setvotingaddress(\'' + obj.result[x][0] + '\');" href="#null" class="ui mini button red" id="vote' + x + '">SELECT</a></td>';
+        }
+
+          c = c + '<td style="width:30%;text-align:left;">' + obj.result[x][0].substr(0, 24) + '...</td><td style="width:30%;text-align:left;">???</td><td style="width:15%;text-align:left;">' + obj.result[x][1]/decimal + '</td><td style="width:15%;text-align:left;">??? %</td></tr>';
+      }
+      c = c + '</tbody></table>';
+      document.getElementById('validators').innerHTML = c;
+		});
+	}
+
+  function vote()
+  {
+    var amount = parseFloat(document.getElementById('vamount').value);
+    amount = amount*decimal;
+    var dest = "STLXffffffffff";
+    var fee = 300;
+    amount = parseInt(amount);
+    var message = votingaddress;
+    var version = "4";
+    var date = Math.round(parseInt(Date.now())/1000)-1;
+    var token = "GSTLX";
+    var txinfo = amount + "-" + date + "-" + dest + "-"  + fee + "-" + message + "-" + pubkey + "-" + token + "-" + version;
+    ipcRenderer.send('setToSign', txinfo);
+    var signature = ipcRenderer.sendSync('request', "sign");
+    document.getElementById('samount').value = "";
+    //document.getElementById('sendbutton').classList.add("disabled");
+    if(confirm("Vote " + amount/decimal + " GSTLX to " + votingaddress.substr(0, 24) + "...?" ))
+    {
+      var txvalues = JSON.stringify({'amount' : amount, 'fee' : fee, 'dest' : dest, 'pubkey' : pubkey, 'date' : date, 'version' : version, 'message' : message, 'signature' : signature, 'token' : token });
+      postData('https://node1.stlx.online/api/?q=transfer', txvalues)
+        .then(data => {
+        if(data.status == "ERROR")
+        {
+          alert("ERROR: " + data.response);
+        }
+        else
+        {
+          alert("SENT! Hash: " + data.response);
+        }
+        get_balance();
+        get_stlg_balance();
+        get_staked();
+        });
+    }
+  }
+
 
 	function send()
 	{
@@ -222,7 +291,7 @@ a { color: #d0d0d0; }
 		var version = "4";
 		var date = Math.round(parseInt(Date.now())/1000)-1;
 		var token = "";
-		var txinfo = amount + "-" + date + "-" + dest + "-"  + fee + "-" + message + "-" + pubkey + "-" + token + + "-" + version;
+		var txinfo = amount + "-" + date + "-" + dest + "-"  + fee + "-" + message + "-" + pubkey + "-" + token + "-" + version;
 		ipcRenderer.send('setToSign', txinfo);
 		var signature = ipcRenderer.sendSync('request', "sign");
 		document.getElementById('samount').value = "";
@@ -241,7 +310,7 @@ a { color: #d0d0d0; }
 					alert("SENT! Hash: " + data.response);
 				}
 				get_balance();
-				get_stlg_balance()
+				get_stlg_balance();
 				get_staked();
 			  });
 		}
@@ -252,19 +321,20 @@ a { color: #d0d0d0; }
 		{
 			document.getElementById('address').value = address;
 			get_balance();
-			get_stlg_balance()
+			get_stlg_balance();
 			get_staked();
+      get_validators();
 		}
 		if(document.getElementById('amount').value.length > 0)
 		{
 			document.getElementById('sendbutton').classList.remove("disabled");
 		}
 	}, 250);
-		
+
 	setInterval(function() {
 		get_staked();
 		get_balance();
-		get_stlg_balance()
+		get_stlg_balance();
 	}, 30000);
 
 	function openexternal(link) {
@@ -275,7 +345,7 @@ a { color: #d0d0d0; }
   </head>
   <body style="text-align:center;">
     <div style="margin-top:12px;" class="ui container">
-	
+
 		<div class="ui grid">
 		  <div class="four wide column">
 		  <table class="ui inverted table">
@@ -349,7 +419,7 @@ a { color: #d0d0d0; }
 						  <button onclick="setbalance(75, 'available', 'samount');" class="ui button">75%</button>
 						  <button onclick="setbalance(99.999, 'available', 'samount');" class="ui red button">100%</button>
 						  <button id="sendbutton" onclick="send();" class="ui button green">STAKE</button>
-						 </div>		
+						 </div>
 						</div>
 						<div id="unstake" style="display:none">
 						 <div class="ui tiny action left icon input" style="width:100%;">
@@ -360,23 +430,26 @@ a { color: #d0d0d0; }
 						  <button onclick="setbalance(75, 'stlxstaked', 'uamount');" class="ui button">75%</button>
 						  <button onclick="setbalance(100, 'stlxstaked', 'uamount');" class="ui red button">100%</button>
 						  <button id="sendbutton" onclick="unstake();" class="ui button green">UNSTAKE</button>
-						 </div>		
+						 </div>
 						</div>
 						<div id="vote" style="display:none">
-						 Voting will be enabled when POS start...	
+              <div class="ui tiny action left icon input" style="width:100%;">
+ 						 <i class="icon"><img style="margin:2px;" class="ui mini image" src="./assets/gstlx.png"></i>
+ 						 <input type="text" id="vamount" placeholder="GSTLX amount to vote">
+ 						 <button onclick="setbalance(25, 'gstlxavailable', 'vamount');" class="ui button">25%</button>
+ 						  <button onclick="setbalance(50, 'gstlxavailable', 'vamount');" class="ui button">50%</button>
+ 						  <button onclick="setbalance(75, 'gstlxavailable', 'vamount');" class="ui button">75%</button>
+ 						  <button onclick="setbalance(100, 'gstlxavailable', 'vamount');" class="ui red button">100%</button>
+ 						  <button id="sendbutton" onclick="vote();" class="ui button green">VOTE</button>
+ 						 </div>
+						 <div id="validators"></div>
 						</div>
-						
-						</td>
-					</tr>
-					<tr>
-						<td colspan="3">
-						<div id="pendingunstakes">No pending unstakes</div>						
+
 						</td>
 					</tr>
 				</tbody>
 			</table>
 			</table>
-		  <div id="stakes"></div>
 		  </div>
 		</div>
 	</div>
