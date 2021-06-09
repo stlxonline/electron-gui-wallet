@@ -37,14 +37,14 @@ a { color: #d0d0d0; }
   <script>
 	const decimal = 100000000;
 	const {ipcRenderer} = require('electron');
-	// send password to main.js 
+	// send password to main.js
 	var address = ipcRenderer.sendSync('request', "address" );
 	var pubkey = ipcRenderer.sendSync('request', "pubkey" );
 	var isatomic = 0;
 	var atomicp = 0;
 	var atoms = [];
 	var tokendecimals = {};
-	
+
 	async function postData(url = '', data = {}) {
 	  // Default options are marked with *
 	  const response = await fetch(url, {
@@ -62,7 +62,7 @@ a { color: #d0d0d0; }
 	  });
 	  return response.json(); // parses JSON response into native JavaScript objects
 	}
-	
+
 	function copytoclipboard() {
 	  /* Get the text field */
 	  var copyText = document.getElementById("address");
@@ -74,7 +74,7 @@ a { color: #d0d0d0; }
 	  /* Alert the copied text */
 	  alert("Copied the text: " + copyText.value);
 	}
-	
+
 	function get_balance()
 	{
 		fetch('https://node1.stlx.online/api/?q=getbalance&address=' + address)
@@ -92,7 +92,7 @@ a { color: #d0d0d0; }
 		amnt = parseFloat(parseFloat(amnt)*value/100);
 		document.getElementById(dest).value = amnt.toFixed(8);
 	}
-	
+
 	function gettokens()
 	{
 		fetch('https://node1.stlx.online/api/?q=gettokensbalance&address=' + address)
@@ -116,7 +116,7 @@ a { color: #d0d0d0; }
 				document.getElementById('tokens').innerHTML = c;
 			});
 	}
-	
+
 	function showatomic()
 	{
 		if(isatomic == 0 && atomicp > 0)
@@ -136,7 +136,7 @@ a { color: #d0d0d0; }
 			alert("You doesn't have transferible tokens for start an atomic transaction");
 		}
 	}
-	
+
 	function send()
 	{
 		if(isatomic == 0)
@@ -187,7 +187,7 @@ a { color: #d0d0d0; }
 			var version = "4";
 			var token = "";
 			var date = Math.round(parseInt(Date.now())/1000)-1;
-			
+
 			var transactions = "";
 			atoms.forEach(function(atom, index) {
 				if(document.getElementById(atom + '_amount').value*tokendecimals[atom] > 0)
@@ -196,7 +196,7 @@ a { color: #d0d0d0; }
 				}
 			});
 			transactions = transactions.slice(0, -1);
-			
+
 			if(transactions.length > 5)
 			{
 				var txinfo = amount + "-" + date + "-"  + dest + "-" + fee + "-" + message + "-" + pubkey + "-" + token + "-" + transactions + "-" + version;
@@ -247,7 +247,7 @@ a { color: #d0d0d0; }
 		{
 			document.getElementById('sendbutton').classList.remove("disabled");
 		}
-		
+
 	}, 250);
 
 	function quit()
@@ -255,7 +255,7 @@ a { color: #d0d0d0; }
 		var mining = ipcRenderer.sendSync('request', "exit");
 		return;
 	}
-		
+
 	setInterval(function() {
 		get_balance();
 	}, 30000);
@@ -264,7 +264,7 @@ a { color: #d0d0d0; }
   </head>
   <body style="text-align:center;">
     <div style="margin-top:12px;" class="ui container">
-	
+
 		<div class="ui grid">
 		  <div class="four wide column">
 		  <table class="ui inverted table">
@@ -288,6 +288,7 @@ a { color: #d0d0d0; }
 		  <tr><td><a href="staking.html"><i class="database icon"></i> Staking</a></td></tr>
 		  <tr><td><a href="mining.html"><i class="tachometer alternate icon"></i> Mining</a></td></tr>
 		  <tr><td><a href="dapps.html"><i class="server icon"></i> DApps</a></td></tr>
+      <tr><td><a href="validator.html"><i class="shield icon"></i> Validator</a></td></tr>
 		  <tr><td><a href="community.html"><i class="user icon"></i> Community</a></td></tr>
 		  </tbody>
 		  </table>
@@ -304,7 +305,7 @@ a { color: #d0d0d0; }
 		  </button></div><div class="ui divider"></div>
 			<div id="send">
 			 <div class="ui tiny input" style="width:100%;"><input type="text" id="dest" placeholder="Destination address..." ></div><br><br>
-			 
+
 			 <div class="ui tiny action left icon input" style="width:100%;">
 			 <i class="icon"><img style="margin:2px;" class="ui mini image" src="./assets/stlx.png"></i>
 			 <input type="text" id="amount" placeholder="STLX amount">
@@ -318,7 +319,7 @@ a { color: #d0d0d0; }
 			 <a href="#" id="atomicbutton" onclick="showatomic();" class="ui disabled button blue"><i class="box icon"></i> SET ATOMIC TX</a>
 			 <a href="#" id="sendbutton" onclick="send();" class="ui button disabled green"><i class="paper plane icon"></i> SEND</a>
 			</div>
-		  
+
 		  </div>
 		</div>
 	</div>

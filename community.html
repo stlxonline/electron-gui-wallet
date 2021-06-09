@@ -37,11 +37,11 @@ a { color: #d0d0d0; }
   <script>
 	const decimal = 100000000;
 	const {ipcRenderer} = require('electron');
-	// send password to main.js 
+	// send password to main.js
 	var address = ipcRenderer.sendSync('request', "address" );
 	var pubkey = ipcRenderer.sendSync('request', "pubkey" );
 	var votingaddress = "";
-	
+
 	async function postData(url = '', data = {}) {
 	  // Default options are marked with *
 	  const response = await fetch(url, {
@@ -59,20 +59,20 @@ a { color: #d0d0d0; }
 	  });
 	  return response.json(); // parses JSON response into native JavaScript objects
 	}
-	
+
 	function setbalance(value)
 	{
 		var amnt = document.getElementById('tokenbalance').innerHTML;
 		amnt = parseFloat(parseFloat(amnt)*value/100);
 		document.getElementById('amount').value = amnt.toFixed(8);
 	}
-	
+
 	function setvotingaddress(address)
 	{
 		votingaddress = address;
 		get_poll();
 	}
-	
+
 	function copytoclipboard() {
 	  /* Get the text field */
 	  var copyText = document.getElementById("address");
@@ -84,7 +84,7 @@ a { color: #d0d0d0; }
 	  /* Alert the copied text */
 	  alert("Copied the text: " + copyText.value);
 	}
-	
+
 	function get_balance()
 	{
 		fetch('https://node1.stlx.online/api/?q=getbalance&address=' + address)
@@ -95,7 +95,7 @@ a { color: #d0d0d0; }
 			document.getElementById('locked').innerHTML = obj.locked/decimal + " STLX";
 		});
 	}
-	
+
 	function get_token_balance()
 	{
 		fetch('https://node1.stlx.online/api/?q=gettokensbalance&address=' + address)
@@ -108,7 +108,7 @@ a { color: #d0d0d0; }
 			}
 		});
 	}
-	
+
 	function get_poll()
 	{
 		fetch('https://node1.stlx.online/api/?q=polls')
@@ -196,7 +196,7 @@ a { color: #d0d0d0; }
 			document.getElementById('sendbutton').classList.add("disabled");
 		}
 	}, 250);
-		
+
 	setInterval(function() {
 		get_balance();
 		get_token_balance()
@@ -207,7 +207,7 @@ a { color: #d0d0d0; }
   </head>
   <body style="text-align:center;">
     <div style="margin-top:12px;" class="ui container">
-	
+
 		<div class="ui grid">
 		  <div class="four wide column">
 		  <table class="ui inverted table">
@@ -231,6 +231,7 @@ a { color: #d0d0d0; }
 		  <tr><td><a href="staking.html"><i class="database icon"></i> Staking</a></td></tr>
 		  <tr><td><a href="mining.html"><i class="tachometer alternate icon"></i> Mining</a></td></tr>
 		  <tr><td><a href="dapps.html"><i class="server icon"></i> DApps</a></td></tr>
+      <tr><td><a href="validator.html"><i class="shield icon"></i> Validator</a></td></tr>
 		  <tr><td><b><i class="user icon"></i> Community</b></td></tr>
 		  </tbody>
 		  </table>
@@ -250,12 +251,12 @@ a { color: #d0d0d0; }
 			<div style="text-align:left;" id="voptions"></div>
 			<div class="ui divider"></div>
 			<div style="text-align:left">
-			
+
 			<h4 style="margin:8px 0px 8px 0px;padding:8px;border-radius: 6px;background:#333;opacity:0.9;" >
-			
+
 			<b>
 				<i class="lock green open icon"></i>
-				<span style="margin-right:8px;">VOTING POWER:</span> 
+				<span style="margin-right:8px;">VOTING POWER:</span>
 				<span id="tokenbalance"></span> STLG
 			</b>
 			<br><br>
@@ -270,7 +271,7 @@ a { color: #d0d0d0; }
 			</h4>
 			</div>
 
-			 
+
 		</div>
 	</div>
 </body>

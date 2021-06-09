@@ -37,16 +37,19 @@ a { color: #d0d0d0; }
   <script>
 	const decimal = 100000000;
 	const {ipcRenderer} = require('electron');
-	// send password to main.js 
+	// send password to main.js
 	var address = ipcRenderer.sendSync('request', "address" );
 	var pubkey = ipcRenderer.sendSync('request', "pubkey" );
-	var txargs = ipcRenderer.sendSync('request', "txargs" );
-	
+	//var txargs = ipcRenderer.sendSync('request', "txargs" );
+  var queryDict = {};
+	location.search.substr(1).split("&").forEach(function(item) {queryDict[item.split("=")[0]] = item.split("=")[1]});
+  var txargs = queryDict["txargs"]; //"signtx/STLX57owh7oyGk5JFTeNGG4Fy19XRR8pQg7hTZS4HqRucFT5ZLRZKpFfi7CAWFSED9yE4XouyNHV5DUsYeij5vLD2Ro9/CTLU/232/";
+
 	var isatomic = 0;
 	var atomicp = 0;
 	var atoms = [];
 	var tokendecimals = {};
-	
+
 	async function postData(url = '', data = {}) {
 	  // Default options are marked with *
 	  const response = await fetch(url, {
@@ -64,37 +67,7 @@ a { color: #d0d0d0; }
 	  });
 	  return response.json(); // parses JSON response into native JavaScript objects
 	}
-	
-	function copytoclipboard() {
-	  /* Get the text field */
-	  var copyText = document.getElementById("address");
-	  /* Select the text field */
-	  copyText.select();
-	  copyText.setSelectionRange(0, 99999); /* For mobile devices */
-	  /* Copy the text inside the text field */
-	  document.execCommand("copy");
-	  /* Alert the copied text */
-	  alert("Copied the text: " + copyText.value);
-	}
-	
-	/*function get_balance()
-	{
-		fetch('https://node1.stlx.online/api/?q=getbalance&address=' + address)
-		.then(response => response.text())
-		.then((response) => {
-			var obj = JSON.parse(response);
-			document.getElementById('available').innerHTML = obj.balance/decimal + " STLX";
-			document.getElementById('locked').innerHTML = obj.locked/decimal + " STLX";
-		});
-	}
 
-	function setbalance(value, src, dest)
-	{
-		var amnt = document.getElementById(src).innerHTML.replace(' STLX', '');
-		amnt = parseFloat(parseFloat(amnt)*value/100);
-		document.getElementById(dest).value = amnt.toFixed(8);
-	}*/
-	
 	function gettokens()
 	{
 		fetch('https://node1.stlx.online/api/?q=gettokensbalance&address=' + address)
@@ -131,6 +104,7 @@ a { color: #d0d0d0; }
 	function send()
 	{
 		var token = document.getElementById('token').innerHTML;
+    if( token == "STLX") token = "";
 		var amount = parseFloat(document.getElementById('amount').value);
 		amount = document.getElementById('amount').innerHTML*tokendecimals[token];
 		var dest = document.getElementById('contract').innerHTML;
@@ -157,32 +131,46 @@ a { color: #d0d0d0; }
 			}
 		});
 	}
-	
-	function quit()
+
+  function quit()
 	{
-		var mining = ipcRenderer.sendSync('request', "exit");
+		window.close();
 		return;
 	}
 
 	setInterval(function() {
-		if(document.getElementById('address').innerHTML != address)
+		if(document.getElementById('address').innerHTML != "A")
 		{
-			document.getElementById('address').innerHTML = address;
+			document.getElementById('address').innerHTML = "A";
 			gettokens();
 		}
 		if(document.getElementById('contract').innerHTML == "")
 		{
 			var txinfo = txargs.split("/");
-			document.getElementById('contract').innerHTML = txinfo[1];
-			document.getElementById('token').innerHTML = txinfo[2];
-			document.getElementById('amount').innerHTML = txinfo[3];
-			document.getElementById('message').innerHTML = txinfo[4];
+      if(txinfo[0] == "signtx")
+      {
+        document.getElementById('contract').innerHTML = txinfo[1];
+        document.getElementById('token').innerHTML = txinfo[2];
+        document.getElementById('amount').innerHTML = txinfo[3];
+        document.getElementById('message').innerHTML = txinfo[4];
+        document.getElementById('fee').innerHTML = "0.000003 STLX";
+      }
+      else if(txinfo[0] == "asigntx")
+      {
+           atoms[txinfo[2]] = txinfo[3];
+           atoms[txinfo[4]] = txinfo[5];
+			     document.getElementById('contract').innerHTML = txinfo[1];
+			     document.getElementById('token').innerHTML = txinfo[3] + " " + txinfo[2] + "<br>" + txinfo[5] + " " + txinfo[4];
+			     //document.getElementById('amount').innerHTML = txinfo[3];
+			     document.getElementById('message').innerHTML = "";
+           document.getElementById('fee').innerHTML = "0.000005";
+      }
 		}
 	}, 250);
   </script>
 
   </head>
-  
+
     <body style="text-align:center;">
     <div style="position:absolute;top:50%;left:50%;margin-right:-50%;transform: translate(-50%, -50%);" class="ui container">
 		<div class="text" style="margin-bottom:16px;font-size:32px;padding:8px;"><img class="ui centered tiny circular image" src="./assets/logo.png" /></div>
@@ -192,13 +180,13 @@ a { color: #d0d0d0; }
 		<span id="contract" style="word-break: break-all;"></span><span style="word-break: break-all;display: none;" id="address"></span></th>
 		</thead>
 		<tbody>
-		<tr style="word-break: break-all;"><td style="word-break: break-all;">Token:<br><span style="word-break: break-all;" id="token"></span></td></tr>
-		<tr style="word-break: break-all;"><td style="word-break: break-all;">Amount<br><span style="word-break: break-all;" id="amount"></span></td></tr>
+		<tr style="word-break: break-all;"><td style="word-break: break-all;">Tokens amount:<br><span style="word-break: break-all;" id="amount"></span> <span style="word-break: break-all;" id="token"></span></td></tr>
+    <tr style="word-break: break-all;"><td style="word-break: break-all;">Fee<br><span style="word-break: break-all;" id="fee"></span> STLX</td></tr>
 		<tr style="word-break: break-all;"><td style="word-break: break-all;">Message:<br><span style="word-break: break-all;" id="message"></span></td></tr>
 		<tr style="word-break: break-all;"><td style="text-align:center;"><a href="#" id="sendbutton" onclick="send();" class="ui button green"><i class="paper plane icon"></i> SEND</a></td></tr>
 		</tbody>
 		</table>
-		
+
 		<!--<table id="d" class="ui inverted table" style="display:none;width:320px;">
 		<thead style="word-break: break-all;">
 		<th style="word-break: break-all;">SENT!></th>

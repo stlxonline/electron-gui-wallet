@@ -37,7 +37,7 @@ a { color: #d0d0d0; }
   <script>
 	const decimal = 100000000;
 	const {ipcRenderer} = require('electron');
-	// send password to main.js 
+	// send password to main.js
 	const address = ipcRenderer.sendSync('request', "address" );
 	const privkey = ipcRenderer.sendSync('request', "privkey" );
 	const rawallet = ipcRenderer.sendSync('request', "rawallet" );
@@ -57,7 +57,7 @@ a { color: #d0d0d0; }
 	  document.execCommand("copy");
 	  alert("Copied the text: " + copyText.value);
 	}
-	
+
 	function get_balance()
 	{
 		fetch('https://node1.stlx.online/api/?q=getbalance&address=' + address)
@@ -128,7 +128,7 @@ a { color: #d0d0d0; }
   </head>
   <body style="text-align:center;">
     <div style="margin-top:12px;" class="ui container">
-	
+
 		<div class="ui grid">
 		  <div class="four wide column">
 		  <table class="ui inverted table">
@@ -152,6 +152,7 @@ a { color: #d0d0d0; }
 		  <tr><td><a href="staking.html"><i class="database icon"></i> Staking</a></td></tr>
 		  <tr><td><a href="mining.html"><i class="tachometer alternate icon"></i> Mining</a></td></tr>
 		  <tr><td><a href="dapps.html"><i class="server icon"></i> DApps</a></td></tr>
+      <tr><td><a href="validator.html"><i class="shield icon"></i> Validator</a></td></tr>
 		  <tr><td><a href="community.html"><i class="user icon"></i> Community</a></td></tr>
 		  </tbody>
 		  </table>
@@ -175,9 +176,9 @@ a { color: #d0d0d0; }
 			 <a href="#null" onclick="copytoclipboardkey();" class="ui blue button"><i class="clone icon"></i>Copy key</a>
 			 <a href="#null" onclick="savekeys();" class="ui green button"><i class="key icon"></i>Save key</a>
 			 <a href="#null" onclick="exportwallet();" class="ui yellow button"><i class="download icon"></i>Export wallet</a>
-			
+
 			</div>
-		  
+
 		  </div>
 		</div>
 	</div>

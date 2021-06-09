@@ -37,7 +37,7 @@ a { color: #d0d0d0; }
   <script>
 	const decimal = 100000000;
 	const {ipcRenderer} = require('electron');
-	// send password to main.js 
+	// send password to main.js
 	var address = ipcRenderer.sendSync('request', "address" );
 
 	function copytoclipboard() {
@@ -47,7 +47,7 @@ a { color: #d0d0d0; }
 	  document.execCommand("copy");
 	  alert("Copied the text: " + copyText.value);
 	}
-	
+
 	function get_balance()
 	{
 		fetch('https://node1.stlx.online/api/?q=getbalance&address=' + address)
@@ -87,7 +87,7 @@ a { color: #d0d0d0; }
   </head>
   <body style="text-align:center;">
     <div style="margin-top:12px;" class="ui container">
-	
+
 		<div class="ui grid">
 		  <div class="four wide column">
 		  <table class="ui inverted table">
@@ -111,6 +111,7 @@ a { color: #d0d0d0; }
 		  <tr><td><a href="staking.html"><i class="database icon"></i> Staking</a></td></tr>
 		  <tr><td><a href="mining.html"><i class="tachometer alternate icon"></i> Mining</a></td></tr>
 		  <tr><td><a href="dapps.html"><i class="server icon"></i> DApps</a></td></tr>
+      <tr><td><a href="validator.html"><i class="shield icon"></i> Validator</a></td></tr>
 		  <tr><td><a href="community.html"><i class="user icon"></i> Community</a></td></tr>
 		  </tbody>
 		  </table>
@@ -128,7 +129,7 @@ a { color: #d0d0d0; }
 			<div style="text-align:left;" id="help">
 			  <h3>STLX GUI WALLET v0.0.9</h3>
 			  <div class="ui divider"></div>
-			  <p>This wallet was created using <a href="#null" onclick="openexternal('https://nodejs.org');">node.js</a> and <a href="#null" onclick="openexternal('https://electronjs.org');">Electron</a>. 
+			  <p>This wallet was created using <a href="#null" onclick="openexternal('https://nodejs.org');">node.js</a> and <a href="#null" onclick="openexternal('https://electronjs.org');">Electron</a>.
 				You can find the source code on <a href="#null" onclick="openexternal('https://github.com/stlxonline/electron-gui-wallet');">Github</a>.</p>
 			  <p>Also, you can find source code of integrated miners here: <a href="#null" onclick="openexternal('https://github.com/stlxonline/cpuminer-opt-cpupower');">cpuminer-opt-cpupower</a>, <a href="#null" onclick="openexternal('https://github.com/stlxonline/python-stlx-miner');">python-stlx-miner</a>.</p>
 			  <p>Names, logos and brands from EVOX, HAC, CPU, SUGAR and YTN are property of the respective owners of this projects. The usage of this names, logos and brands
@@ -152,7 +153,7 @@ a { color: #d0d0d0; }
 			  <a href="mailto:help@stlx.online" style="font-size: 16px;margin:32px;"><i class="mail icon huge teal"></i></a>
 				<a href="#null" onclick="openexternal('https://stlx.online/docs');" style="font-size: 16px;margin:32px;"><i class="question circle icon huge teal"></i></a>
 			</div>
-		  
+
 		  </div>
 		</div>
 	</div>

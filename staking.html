@@ -236,7 +236,7 @@ a { color: #d0d0d0; }
           c = c + '<tr><td style="width:10%;text-align:center;"><a onclick="setvotingaddress(\'' + obj.result[x][0] + '\');" href="#null" class="ui mini button red" id="vote' + x + '">SELECT</a></td>';
         }
 
-          c = c + '<td style="width:30%;text-align:left;">' + obj.result[x][0].substr(0, 24) + '...</td><td style="width:30%;text-align:left;">???</td><td style="width:15%;text-align:left;">' + obj.result[x][1]/decimal + '</td><td style="width:15%;text-align:left;">??? %</td></tr>';
+          c = c + '<td style="width:30%;text-align:left;">' + obj.result[x][0].substr(0, 24) + '...</td><td style="width:30%;text-align:left;">' + obj.result[x][1] + '</td><td style="width:15%;text-align:left;">' + obj.result[x][2]/decimal + '</td><td style="width:15%;text-align:left;">??? %</td></tr>';
       }
       c = c + '</tbody></table>';
       document.getElementById('validators').innerHTML = c;
@@ -369,6 +369,7 @@ a { color: #d0d0d0; }
 		  <tr><td><b><i class="database icon"></i> Staking</v></td></tr>
 		  <tr><td><a href="mining.html"><i class="tachometer alternate icon"></i> Mining</a></td></tr>
 		  <tr><td><a href="dapps.html"><i class="server icon"></i> DApps</a></td></tr>
+      <tr><td><a href="validator.html"><i class="shield icon"></i> Validator</a></td></tr>
 		  <tr><td><a href="community.html"><i class="user icon"></i> Community</a></td></tr>
 		  </tbody>
 		  </table>

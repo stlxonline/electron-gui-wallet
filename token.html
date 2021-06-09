@@ -38,13 +38,13 @@ a { color: #d0d0d0; }
 	const decimal = 100000000;
 	var tokendecimal = 100000000;
 	const {ipcRenderer} = require('electron');
-	// send password to main.js 
+	// send password to main.js
 	var address = ipcRenderer.sendSync('request', "address" );
 	var pubkey = ipcRenderer.sendSync('request', "pubkey" );
-	
+
 	var queryDict = {};
 	location.search.substr(1).split("&").forEach(function(item) {queryDict[item.split("=")[0]] = item.split("=")[1]});
-	
+
 	async function postData(url = '', data = {}) {
 	  // Default options are marked with *
 	  const response = await fetch(url, {
@@ -62,7 +62,7 @@ a { color: #d0d0d0; }
 	  });
 	  return response.json(); // parses JSON response into native JavaScript objects
 	}
-	
+
 	function copytoclipboard() {
 	  /* Get the text field */
 	  var copyText = document.getElementById("address");
@@ -74,7 +74,7 @@ a { color: #d0d0d0; }
 	  /* Alert the copied text */
 	  alert("Copied the text: " + copyText.value);
 	}
-	
+
 	function send()
 	{
 		var amount = parseFloat(document.getElementById('amount').value);
@@ -93,7 +93,7 @@ a { color: #d0d0d0; }
 		document.getElementById('amount').value = "";
 		document.getElementById('dest').value = "";
 		document.getElementById('sendbutton').classList.add("disabled");
-		
+
 		if(confirm("Send " + amount/tokendecimal + " " + token + " + " + (fee/decimal).toFixed(8) + " STLX on fees?"))
 		{
 			var txvalues = JSON.stringify({'amount' : amount, 'fee' : fee, 'dest' : dest, 'pubkey' : pubkey, 'date' : date, 'version' : version, 'message' : message, 'signature' : signature, 'token' : token });
@@ -112,7 +112,7 @@ a { color: #d0d0d0; }
 			  });
 		}
 	}
-	
+
 	function get_balance()
 	{
 		fetch('https://node1.stlx.online/api/?q=getbalance&address=' + address)
@@ -123,14 +123,14 @@ a { color: #d0d0d0; }
 			document.getElementById('locked').innerHTML = obj.locked/decimal + " STLX";
 		});
 	}
-	
+
 	function setbalance(value)
 	{
 		var amnt = document.getElementById('tokenbalance').innerHTML.replace(' ' + queryDict["token"], '');
 		amnt = parseFloat(parseFloat(amnt)*value/100);
 		document.getElementById('amount').value = amnt.toFixed(8);
 	}
-	
+
 	function get_token_balance()
 	{
 		fetch('https://node1.stlx.online/api/?q=gettokensbalance&address=' + address)
@@ -146,7 +146,7 @@ a { color: #d0d0d0; }
 			}
 		});
 	}
-	
+
 	function get_token_info()
 	{
 		fetch('https://node1.stlx.online/server.php?q=gettokeninfo&token=' + queryDict["token"])
@@ -154,16 +154,16 @@ a { color: #d0d0d0; }
 		.then((response) => {
 			var obj = JSON.parse(response);
 			document.getElementById('tokenname').innerHTML = obj.token[0].name;
-			
+
 			if( obj.token[0].options.tradeable == 1)
 			{
-				document.getElementById("send").style.display = ""; 
-				document.getElementById("nosend").style.display = "none"; 
+				document.getElementById("send").style.display = "";
+				document.getElementById("nosend").style.display = "none";
 			}
 			else
 			{
-				document.getElementById("send").style.display = "none"; 
-				document.getElementById("nosend").style.display = ""; 
+				document.getElementById("send").style.display = "none";
+				document.getElementById("nosend").style.display = "";
 			}
 		});
 	}
@@ -188,13 +188,13 @@ a { color: #d0d0d0; }
 			document.getElementById('sendbutton').classList.remove("disabled");
 		}
 	}, 250);
-		
+
 	function startmining()
 	{
 		var mining = ipcRenderer.sendSync('request', "startmining");
 		return;
 	}
-		
+
 	setInterval(function() {
 		get_balance();
 		get_token_balance()
@@ -205,7 +205,7 @@ a { color: #d0d0d0; }
   </head>
   <body style="text-align:center;">
     <div style="margin-top:12px;" class="ui container">
-	
+
 		<div class="ui grid">
 		  <div class="four wide column">
 		  <table class="ui inverted table">
@@ -229,6 +229,7 @@ a { color: #d0d0d0; }
 		  <tr><td><a href="staking.html"><i class="database icon"></i> Staking</a></td></tr>
 		  <tr><td><a href="mining.html"><i class="tachometer alternate icon"></i> Mining</a></td></tr>
 		  <tr><td><a href="dapps.html"><i class="server icon"></i> DApps</a></td></tr>
+      <tr><td><a href="validator.html"><i class="shield icon"></i> Validator</a></td></tr>
 		  <tr><td><a href="community.html"><i class="user icon"></i> Community</a></td></tr>
 		  </tbody>
 		  </table>
@@ -258,7 +259,7 @@ a { color: #d0d0d0; }
 			  <button onclick="setbalance(75);" class="ui button">75%</button>
 			  <button onclick="setbalance(100);" class="ui red button">100%</button>
 			</div><br><br>
-			 <a href="#" id="sendbutton" onclick="send();" class="ui button disabled green">SEND</a>			
+			 <a href="#" id="sendbutton" onclick="send();" class="ui button disabled green">SEND</a>
 			</div>
 			<div id="nosend" style="display:none">
 				This token is not tradeable.

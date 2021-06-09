@@ -3,9 +3,9 @@ const { generateKeyPairSync } = require('crypto');
 const { exec, spawn } = require('child_process');
 const fs = require('fs')
 const path = require('path').dirname(require.main.filename) + '/../../wallets/stlx.wallet'
-const regfile = require('path').dirname(require.main.filename) + '/../../stlx.reg'
-const temppassfile = require('path').dirname(require.main.filename) + '/../../tmpp.txt'
-const pathurl = require('path').dirname(require.main.filename).replace("\\resources\\app", "").replaceAll("\\", "\\\\");
+//const regfile = require('path').dirname(require.main.filename) + '/../../stlx.reg'
+//const temppassfile = require('path').dirname(require.main.filename) + '/../../tmpp.txt'
+//const pathurl = require('path').dirname(require.main.filename).replace("\\resources\\app", "").replaceAll("\\", "\\\\");
 const bs58 = require('bs58')
 global.addr = ""
 global.pbkey = ""
@@ -17,9 +17,9 @@ global.b58pvkey = ""
 global.rawallet = ""
 global.txargs = ""
 global.iswallet = 0
-global.tmppass = ""
+//global.tmppass = ""
 
-var regkey = 'REGEDIT4'
+/*var regkey = 'REGEDIT4'
 regkey = regkey + "\n"
 regkey = regkey + "\n"
 regkey = regkey +'[HKEY_CLASSES_ROOT\\stlx]'
@@ -48,9 +48,9 @@ fs.writeFile(regfile, regkey, function(err) {
 	if(err) {
 		return console.log(err);
 	}
-}); 
+});*/
 
-// receive message from create.html 
+// receive message from create.html
 ipcMain.on('setToSign', (event, arg) => {
 	tobesigned = arg;
 	// send message to create.html
@@ -63,7 +63,7 @@ ipcMain.on('setToMine', (event, arg) => {
 	event.sender.send('setToMine-reply', "done");
 });
 
-ipcMain.on('setTMPPass', (event, arg) => {
+/*ipcMain.on('setTMPPass', (event, arg) => {
 	pass = arg;
 	fs.writeFile(temppassfile, pass, function(err) {
 		if(err) {
@@ -72,9 +72,9 @@ ipcMain.on('setTMPPass', (event, arg) => {
 	});
 	// send message to create.html
 	event.sender.send('setTMPPass-reply', "done");
-});
+});*/
 
-// receive message from create.html 
+// receive message from create.html
 ipcMain.on('create-send', (event, arg) => {
 	let { publicKey, privateKey } = generateKeyPairSync('rsa', {
 	  modulusLength: 2048,
@@ -116,14 +116,14 @@ ipcMain.on('create-send', (event, arg) => {
 		if(err) {
 			return console.log(err);
 		}
-	}); 
+	});
 	// send message to create.html
 	event.sender.send('create-reply', "created");
 });
 
-// receive message from create.html 
+// receive message from create.html
 ipcMain.on('index-send', (event, arg) => {
-	
+
 	var crypto = require('crypto');
 	var privateKey = fs.readFileSync(path)
 	b58pvkey = privateKey
@@ -146,7 +146,7 @@ ipcMain.on('index-send', (event, arg) => {
 		console.log(error)
 		event.sender.send('index-reply', "bad_decrypt");
 	}
-	
+
 	var pubKeyObject = crypto.createPublicKey({
 		key: privateKey,
 		format: 'pem'
@@ -156,7 +156,7 @@ ipcMain.on('index-send', (event, arg) => {
 		format: 'pem',
 		type: 'spki'
 	})
-	
+
 	var pubkey = publicKey.toString().replace("-----BEGIN PUBLIC KEY-----", "");
 	pubkey = pubkey.replace("-----END PUBLIC KEY-----", "");
 	pubkey = pubkey.replace(/\n/g, '')
@@ -181,9 +181,9 @@ ipcMain.on('index-send', (event, arg) => {
 	event.sender.send('index-reply', "opened");
 });
 
-// receive message from create.html 
+// receive message from create.html
 ipcMain.on('key-send', (event, arg) => {
-	
+
 	var crypto = require('crypto');
 	var pvkeybytes = bs58.decode(arg)
 	var privateKey = pvkeybytes.toString()
@@ -203,7 +203,7 @@ ipcMain.on('key-send', (event, arg) => {
 		console.log(error)
 		event.sender.send('key-reply', "bad_decrypt");
 	}
-	
+
 	var pubKeyObject = crypto.createPublicKey({
 		key: privateKey,
 		format: 'pem'
@@ -213,7 +213,7 @@ ipcMain.on('key-send', (event, arg) => {
 		format: 'pem',
 		type: 'spki'
 	})
-	
+
 	var pubkey = publicKey.toString().replace("-----BEGIN PUBLIC KEY-----", "");
 	pubkey = pubkey.replace("-----END PUBLIC KEY-----", "");
 	pubkey = pubkey.replace(/\n/g, '')
@@ -238,10 +238,10 @@ ipcMain.on('key-send', (event, arg) => {
 	event.sender.send('key-reply', "opened");
 });
 
-// receive message from create.html 
+// receive message from create.html
 ipcMain.on('transfer', (event, arg) => {
 		const https = require('https')
-		
+
 		//var postData = JSON.stringify({msg: 'Hello World!'})
 
 		const options = {
@@ -268,11 +268,11 @@ ipcMain.on('transfer', (event, arg) => {
 		req.end()
 });
 
-// receive message from create.html 
+// receive message from create.html
 ipcMain.on('request', (event, arg) => {
 	if(arg == "sign")
 	{
-		
+
 		var crypto = require('crypto');
 		var signature = crypto.sign("sha256", Buffer.from(tobesigned), {
 			key: pvkey,
@@ -292,7 +292,7 @@ ipcMain.on('request', (event, arg) => {
 		exec('start ./stlxhasher/hasher.exe ' + addr)
 		event.returnValue = "ok";
 	}
-	if(arg == "installprotocol")
+/*	if(arg == "installprotocol")
 	{
 		exec('start regedit.exe /S ' + regfile)
 		event.returnValue = "ok";
@@ -301,7 +301,7 @@ ipcMain.on('request', (event, arg) => {
 	{
 		exec('start notepad.exe ' + regfile)
 		event.returnValue = "ok";
-	}
+	}*/
 	if(arg == "address")
 	{
 		event.returnValue = addr;
@@ -335,7 +335,7 @@ ipcMain.on('request', (event, arg) => {
 try {
   if (fs.existsSync(path)) {
     iswallet = 1;
-	var parg = process.argv[1];
+	/*var parg = process.argv[1];
 	parg = parg.split(":");
 	if(parg.length == 2)
 	{
@@ -348,7 +348,7 @@ try {
 		{
 			app.quit();
 		}
-	}
+	}*/
   }
   else {
 	  iswallet = 0;
@@ -357,7 +357,7 @@ try {
   console.error(err)
 }
 
-function createWindow () {  
+function createWindow () {
   if(iswallet == 1)
   {
 	  const win = new BrowserWindow({
@@ -368,17 +368,17 @@ function createWindow () {
 		  nodeIntegration: true
 		}
 	  })
-	  
+
 	  //win.setResizable(false);
-	  fs.unlink(temppassfile,function(err){
+/*	  fs.unlink(temppassfile,function(err){
 			if(err) return console.log(err);
-	   });  
+		});*/
 
 	  win.setMenuBarVisibility(false)
 	  win.maximize();
 	  win.loadFile('index.html')
   }
-  else if(iswallet == 2)
+/*  else if(iswallet == 2)
   {
 	  const win = new BrowserWindow({
 		width: 500,
@@ -388,16 +388,16 @@ function createWindow () {
 		  nodeIntegration: true
 		}
 	  })
-	  
+
 	  //win.setResizable(false);
 	  if (fs.existsSync(temppassfile))
 			tmppass = fs.readFileSync(temppassfile)
 	  else
 		  tmppass = "";
-	  
+
 	  win.setMenuBarVisibility(false)
 	  win.loadURL(require('path').dirname(require.main.filename) + '/sindex.html?tmpp=' + tmppass)
-  }
+  }*/
   else
   {
 	  const win = new BrowserWindow({
@@ -408,7 +408,7 @@ function createWindow () {
 		  nodeIntegration: true
 		}
 	  })
-	  
+
 	  //win.setResizable(false);
 
 	  win.setMenuBarVisibility(false)
