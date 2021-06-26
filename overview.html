@@ -114,7 +114,7 @@ a { color: #d0d0d0; }
 				{
 					if(value[0]+value[1] > 0 || key == "STLG")
 					{
-						c += '<tr><td><a href="token.html?token=' + key + '"><img src="assets/' + key + '.png" class="ui mini avatar image circular" > <b>' + value[3] + '</b></a></td>';
+						c += '<tr><td><a href="token.html?token=' + key + '"><img src="assets/' + key.toLowerCase() + '.png" class="ui mini avatar image circular" > <b>' + value[3] + '</b></a></td>';
 						c += '<td>' + key + '</td>';
 						c += '<td style="text-align:right;">' + parseFloat(value[1]/value[2]) + ' ' + key + '</td>';
 						c += '<td style="text-align:right;">' + parseFloat(value[0]/value[2]) + ' ' + key + '</td></tr>';
