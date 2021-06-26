@@ -206,6 +206,16 @@ a { color: #d0d0d0; }
 			});
 	}
 
+  function get_pending()
+  {
+    fetch('https://node1.stlx.online/api/?q=getposbalance&address=' + address)
+      .then(response => response.text())
+      .then((response) => {
+        var obj = JSON.parse(response);
+        document.getElementById('pending').innerHTML = obj.balance.total/decimal;
+      });
+  }
+
 	function get_stlg_balance()
 	{
 		fetch('https://node1.stlx.online/api/?q=gettokensbalance&address=' + address)
@@ -275,6 +285,7 @@ a { color: #d0d0d0; }
         get_balance();
         get_stlg_balance();
         get_staked();
+        get_pending();
         });
     }
   }
@@ -312,6 +323,7 @@ a { color: #d0d0d0; }
 				get_balance();
 				get_stlg_balance();
 				get_staked();
+        get_pending();
 			  });
 		}
 	}
@@ -324,6 +336,7 @@ a { color: #d0d0d0; }
 			get_stlg_balance();
 			get_staked();
       get_validators();
+      get_pending();
 		}
 		if(document.getElementById('amount').value.length > 0)
 		{
@@ -335,6 +348,7 @@ a { color: #d0d0d0; }
 		get_staked();
 		get_balance();
 		get_stlg_balance();
+    get_pending();
 	}, 30000);
 
 	function openexternal(link) {
@@ -386,29 +400,33 @@ a { color: #d0d0d0; }
 		  </button></div>
 			<div class="ui divider"></div>
 			<table class="ui table inverted">
-				<thead>
-					<th style="width:30%;"><img src="./assets/stlg.png" class="ui image circular avatar mini" /> Stellia GAS <i>(STLG)</i></th>
-					<th style="width:30%;text-align:right;"><i class="lock green open icon"></i> <span id="stlgavailable">0</span> STLG</th>
-					<th style="width:40%;text-align:right;">
-					<button style="margin:2px;" class="ui mini button">VOTE</button>
-					</th>
+        <thead>
+					<th style="width:30%;text-align:center;">Token</th>
+					<th style="width:30%;text-align:center;">Amounts</th>
+					<th style="width:40%;text-align:right;">Actions</th>
 				</thead>
-				<thead>
-					<th style="width:30%;"><img src="./assets/gstlx.png" class="ui image circular avatar mini" /> Stellia GOV <i>(SGTLX)</i></th>
-					<th style="width:30%;text-align:right;"><i class="lock green open icon"></i> <span id="gstlxavailable">0</span> GSTLX</th>
-					<th style="width:40%;text-align:right;">
+        <tbody>
+				<tr>
+					<td style="width:30%;"><img src="./assets/stlg.png" class="ui image circular avatar mini" /> Stellia GAS <i>(STLG)</i></td>
+					<td style="width:30%;text-align:right;"><span id="stlgavailable">0</span> STLG</td>
+					<td style="width:40%;text-align:right;">
+        </td>
+      </tr>
+				<tr>
+					<td style="width:30%;"><img src="./assets/gstlx.png" class="ui image circular avatar mini" /> Stellia GOV <i>(SGTLX)</i></td>
+					<td style="width:30%;text-align:right;"><i class="lock green open icon"></i> <span id="gstlxavailable">0</span> GSTLX</td>
+					<td style="width:40%;text-align:right;">
 					<button style="margin:2px;" id="optvote" onclick="showopt(3);" class="ui mini button">VOTE</button>
-					</th>
-				</thead>
-				<thead>
-					<th style="width:30%;"><img src="./assets/stlx.png" class="ui image circular avatar mini" /> Staked <i>(STLX)</i></th>
-					<th style="width:30%;text-align:right;"><i class="database yellow icon"></i> <span id="stlxstaked">0</span> STLX</th>
-					<th style="width:40%;text-align:right;">
+        </td>
+      </tr>
+				<tr>
+					<td style="width:30%;"><img src="./assets/stlx.png" class="ui image circular avatar mini" /> Staked <i>(STLX)</i></td>
+					<td style="width:30%;text-align:right;"><i class="database yellow icon"></i> <span id="stlxstaked">0</span> STLX</td>
+					<td style="width:40%;text-align:right;">
 					<button style="margin:2px;" id="optstake" onclick="showopt(1);" class="ui mini button blue">STAKE</button>
 					<button id="optunstake" style="margin:2px;" onclick="showopt(2);" class="ui mini button">UNSTAKE</button>
-					</th>
-				</thead>
-				<tbody>
+        </td>
+      </tr>
 					<tr>
 						<td colspan="3">
 						<div id="stake">
@@ -450,6 +468,15 @@ a { color: #d0d0d0; }
 					</tr>
 				</tbody>
 			</table>
+      <div class="ui divider"></div>
+      <table class="ui inverted table">
+        <tr>
+          <td style="width:30%;"><img src="./assets/stlx.png" class="ui image circular avatar mini" /> Pending rewards <i>(STLX)</i></td>
+          <td style="width:30%;text-align:right;"><i class="trophy blue icon"></i> <span id="pending">0</span> STLX</td>
+          <td style="width:40%;text-align:right;">
+          <button style="margin:2px;" class="ui disabled mini button purple">AUTOMATIC PAYMENTS EVERY WEEK</button>
+        </td>
+      </tr>
 			</table>
 		  </div>
 		</div>
