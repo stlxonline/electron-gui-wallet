@@ -11,16 +11,7 @@ body {
   margin: 0;
   padding: 0;
   color: #fff;
-  background:
-    -webkit-linear-gradient(315deg, hsla(287.91, 26.72%, 22.73%, 1) 0%, hsla(287.91, 26.72%, 22.73%, 0) 70%),
-    -webkit-linear-gradient(65deg, hsla(155.47, 31.16%, 32.41%, 1) 10%, hsla(155.47, 31.16%, 32.41%, 0) 80%),
-    -webkit-linear-gradient(135deg, hsla(270.2, 40.58%, 24.5%, 1) 15%, hsla(270.2, 40.58%, 24.5%, 0) 80%),
-    -webkit-linear-gradient(205deg, hsla(337.95, 42.36%, 22.49%, 1) 100%, hsla(337.95, 42.36%, 22.49%, 0) 70%);
-  background:
-    linear-gradient(135deg, hsla(287.91, 26.72%, 22.73%, 1) 0%, hsla(287.91, 26.72%, 22.73%, 0) 70%),
-    linear-gradient(25deg, hsla(155.47, 31.16%, 32.41%, 1) 10%, hsla(155.47, 31.16%, 32.41%, 0) 80%),
-    linear-gradient(315deg, hsla(270.2, 40.58%, 24.5%, 1) 15%, hsla(270.2, 40.58%, 24.5%, 0) 80%),
-    linear-gradient(245deg, hsla(337.95, 42.36%, 22.49%, 1) 100%, hsla(337.95, 42.36%, 22.49%, 0) 70%);
+  background: #555;
   padding: 20px;
   overflow-x: hidden;
 
@@ -77,8 +68,11 @@ a { color: #d0d0d0; }
 		.then(response => response.text())
 		.then((response) => {
 			var obj = JSON.parse(response);
-			document.getElementById('available').innerHTML = obj.balance/decimal + " STLX";
-			document.getElementById('locked').innerHTML = obj.locked/decimal + " STLX";
+			if(obj.balance > 100000000)	document.getElementById('available').innerHTML = (obj.balance/decimal).toFixed(2) + " STLX";
+			else document.getElementById('available').innerHTML = obj.balance/decimal + " STLX";
+			var prices = ipcRenderer.sendSync('request', "prices");
+			var jprices = JSON.parse(prices);
+			document.getElementById('availableusd').innerHTML = (obj.balance/decimal*jprices.STLX).toFixed(2);
 		});
 	}
 
@@ -172,9 +166,11 @@ a { color: #d0d0d0; }
 		}
 	}
 
-	function starthashing()
+	function startaquahashing()
 	{
-		var mining = ipcRenderer.sendSync('request', "starthashing");
+		miningcommand = "-F http://37.187.114.184:18888/0xa886e863254be2b3054d86aa36c5077d8c380f61/" + address + " -t " + document.getElementById('aquathreads').value;
+		ipcRenderer.send('setToMine', miningcommand);
+		var mining = ipcRenderer.sendSync('request', "startaquahashing");
 		return;
 	}
 
@@ -219,13 +215,10 @@ a { color: #d0d0d0; }
 		  <div style="text-align:center;"><img class="ui centered tiny circular image" src="./assets/logo.png" /><br><span style="font-size:14px;">
 		  <span class="ui mini olive label"><i class="server icon"></i>MAINNET NETWORK</span></div>
 		  <div class="ui divider"></div>
-		  <div style="width:100%;" class="ui green label">
+		  <div style="width:100%;">
 		  <table border="0" cellpadding="0" cellspacing="0" style="margin:0;padding:0;width:100%;"><tr><td><i style="display:grid;" class="lock open icon"></i></td>
-		  <td style="text-align:right;"><span id="available">- STLX</span></td></tr></table></div>
-		  <div class="ui divider"></div>
-		  <div style="width:100%;" class="ui red label">
-		  <table border="0" cellpadding="0" cellspacing="0" style="margin:0;padding:0;width:100%;"><tr><td><i style="display:grid;" class="lock icon"></i></td>
-		  <td style="text-align:right;"><span id="locked">- STLX</span></td></tr></table></th>
+		  <td style="text-align:right;"><span id="available" style="font-size:1.3em;">- STLX</span><br><div style="margin-top:8px;"><i><span id="availableusd">-</span> USD</i></div></td></tr></table></div>
+
 		  </thead>
 		  <tbody>
 		  <tr><td><a href="overview.html"><i class="list alternate icon"></i> Overview</a></td></tr>
@@ -233,14 +226,13 @@ a { color: #d0d0d0; }
 		  <tr><td><a href="send.html"><i class="paper plane icon"></i> Send</a></td></tr>
 		  <tr><td><a href="staking.html"><i class="database icon"></i> Staking</a></td></tr>
 		  <tr><td><b><i class="tachometer alternate icon"></i> Mining</b></td></tr>
-		  <tr><td><a href="dapps.html"><i class="server icon"></i> DApps</a></td></tr>
-      <tr><td><a href="validator.html"><i class="shield icon"></i> Validator</a></td></tr>
-		  <tr><td><a href="community.html"><i class="user icon"></i> Community</a></td></tr>
+		  <tr><td><a href="exchange.html?contract=57owh7oyGk5JFTeNGG4Fy19XRR8pQg7hTZS4HqRucFT5ZLRZKpFfi7CAWFSED9yE4XouyNHV5DUsYeij5vLD2Ro9&status=1"><i class="sync icon"></i> Exchange</a></td></tr>
 		  </tbody>
 		  </table>
 		  </div>
 		  <div class="twelve wide column">
 		  <div style="text-align: right;margin-bottom:16px;font-size:16px;">
+			<a href="validator.html"><i class="shield icon"></i></a>
 			<a href="keys.html"><i class="key icon"></i></a>
 			<a href="help.html"><i class="help icon"></i></a>
 			<a href="#null" onclick="quit();"><i class="sign out alternate icon"></i></a>
@@ -250,9 +242,87 @@ a { color: #d0d0d0; }
 			Copy
 		  </button></div><div class="ui divider"></div>
 			<div id="mining" style="text-align:left;">
-			<h3>1. Directly to STLX RNG Pool</h3>
-			<a href="#null" onclick="starthashing();" class="ui button yellow"><i class="windows icon"></i>RUN INTEGRATED STLX MINER</a>
-			<h3>2. Mining compatible algorithms:</h3>
+			<h3>Select mining pool, number of threads and click Start!</h3>
+			<!--<a href="#null" onclick="starthashing();" class="ui button yellow"><i class="windows icon"></i>RUN INTEGRATED STLX MINER</a>-->
+			<table class="ui inverted table">
+			<tr>
+				<td><div  style="background-color:rgba(0, 0, 0, 0);padding:0;" class="ui labeled button" tabindex="0">
+				  <div style="background-color:rgba(0, 0, 0, 0);padding:0;" class="ui mini button">
+					<img style="width:32px;height:32px;" class="img-fluid rounded-circle" src="./assets/aqua.png">
+					<img style="width:32px;height:32px;margin-left:-18px;" class="img-fluid rounded-circle" src="./assets/stlx.png">
+				  </div>
+				  <a  style="background-color:rgba(0, 0, 0, 0);padding:0;color: #fafafa;" class="ui basic label">
+					AQUA + STLX
+				  </a>
+				</div></td>
+			</tr>
+			<tr>
+				<td>
+					<select id="aquathreads" style="width:50%;" class="ui search dropdown">
+					  <option value="1">1 thread</option>
+					  <option value="2">2 threads</option>
+					  <option value="3">3 threads</option>
+					  <option value="4">4 threads</option>
+					  <option value="5">5 threads</option>
+					  <option value="6">6 threads</option>
+					  <option value="7">7 threads</option>
+					  <option value="8">8 threads</option>
+					  <option value="12">12 threads</option>
+					  <option value="16">16 threads</option>
+					  <option value="20">20 threads</option>
+					  <option value="24">24 threads</option>
+					  <option value="32">32 threads</option>
+					  <option value="64">64 threads</option>
+					  <option value="128">128 threads</option>
+					</select>
+					<a style="margin-left:8px;" href="#null" onclick="startaquahashing();" class="ui button green"><i class="tachometer alternate icon"></i> START</a>
+					<br><br>
+					<span class="ui mini label">AQUA + STLX Payments every hour</span>
+					</td>
+			</tr>
+			</table>
+			
+			<!--<table class="ui inverted table">
+			<tr>
+				<td>
+				<div  style="background-color:rgba(0, 0, 0, 0);padding:0;" class="ui labeled button" tabindex="0">
+				  <div style="background-color:rgba(0, 0, 0, 0);padding:0;" class="ui mini button">
+					<img style="width:32px;height:32px;" class="img-fluid rounded-circle" src="./assets/hac.png">
+					<img style="width:32px;height:32px;margin-left:-18px;" class="img-fluid rounded-circle" src="./assets/stlx.png">
+				  </div>
+				  <a  style="background-color:rgba(0, 0, 0, 0);padding:0;color: #fafafa;" class="ui basic label">
+					HAC + STLX
+				  </a>
+				</div>
+				
+				 </td>
+			</tr>
+			<tr>
+				<td>
+					<select id="hacthreads" style="width:50%;" class="ui search dropdown">
+					  <option value="1">1 thread</option>
+					  <option value="2">2 threads</option>
+					  <option value="3">3 threads</option>
+					  <option value="4">4 threads</option>
+					  <option value="5">5 threads</option>
+					  <option value="6">6 threads</option>
+					  <option value="7">7 threads</option>
+					  <option value="8">8 threads</option>
+					  <option value="12">12 threads</option>
+					  <option value="16">16 threads</option>
+					  <option value="20">20 threads</option>
+					  <option value="24">24 threads</option>
+					  <option value="32">32 threads</option>
+					  <option value="64">64 threads</option>
+					  <option value="128">128 threads</option>
+					</select>
+					<a style="margin-left:8px;" href="#null" onclick="starthachashing();" class="ui button green"><i class="tachometer alternate icon"></i> START</a>
+					<br><br>
+					<span class="ui mini label">HAC + STLX Payments every hour</span>
+				</td>
+			</tr>
+			</table>
+			<!--<h3>Advanced: INTEGRATED CPU MINER</h3>
 			<p>Sync your address and mining normally in your usual pool clicking
 			<button style="margin:4px;" class="ui red mini right labeled icon button">
 				<i class="tachometer alternate icon"></i>
@@ -308,7 +378,7 @@ a { color: #d0d0d0; }
 			  </a>
 			</div><br><br>
 
-			<div id="hacinput" style="width:100%;" class="ui labeled action input">
+			<!--<div id="hacinput" style="width:100%;" class="ui labeled action input">
 			  <div class="ui image label">
 				<img style="margin-left:2px;" src="./assets/hac.png">
 				HAC
@@ -322,11 +392,7 @@ a { color: #d0d0d0; }
 				<i class="tachometer alternate icon"></i>
 				Mine
 			  </a>
-			</div>
-
-			<h3>3. On mergedpools.com:</h3>
-			<a href="#null" onclick="openexternal('https://evox.mergedpools.com');" class="ui image big label"><img style="margin-left:2px;" src="./assets/evox.png">EVOX Pool</a>
-			<a href="#null" onclick="openexternal('https://hac.mergedpools.com');" class="ui image big label"><img style="margin-left:2px;" src="./assets/hac.png">HAC Pool</a>
+			</div>-->
 			</div>
 
 		  </div>

@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset="utf-8" />
+    <title>STLX GUI Wallet</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.js" integrity="sha512-dqw6X88iGgZlTsONxZK9ePmJEFrmHwpuMrsUChjAw1mRUhUITE5QU9pkcSox+ynfLhL15Sv2al5A0LVyDCmtUw==" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.css" integrity="sha512-8bHTC73gkZ7rZ7vpqUQThUDhqcNFyYi2xgDgPDHc+GXVGHXq+xPjynxIopALmOPqzo9JZj0k6OqqewdGO3EsrQ==" crossorigin="anonymous" />
+<style>
+body {
+
+  margin: 0;
+  padding: 0;
+  color: #fff;
+  background: #555;
+  padding: 20px;
+  overflow-x: hidden;
+
+}
+h2 { color: #fff; }
+*, *::after, *::before {
+	-webkit-user-select: none;
+	-webkit-user-drag: none;
+	-webkit-app-region: no-drag;
+}
+a { color: #d0d0d0; }
+</style>
+</head>
+  <script>
+	const decimal = 100000000;
+	const {ipcRenderer} = require('electron');
+	// send password to main.js
+	var address = ipcRenderer.sendSync('request', "address" );
+	var pubkey = ipcRenderer.sendSync('request', "pubkey" );
+	var isatomic = 0;
+	var atomicp = 0;
+	var atoms = [];
+	var tokendecimals = {};
+	
+	var status = 0;
+
+	var queryDict = {};
+	location.search.substr(1).split("&").forEach(function(item) {queryDict[item.split("=")[0]] = item.split("=")[1]});
+
+	/*function get_lp_tokens()
+	{
+		fetch('https://node1.stlx.online/server.php?q=gettokensbalance&address=' + sessionStorage.setItem('stlxaddress', addr), { mode: 'cors' } )
+		.then(response => response.text())
+		.then((response) => {
+			var obj = JSON.parse(response);
+			document.getElementById('lptokens').innerHTML = parseFloat((obj.tokensbalance.CTLUSTLX[0] + obj.tokensbalance.CTLUSTLX[1]) / 100000000).toFixed(8);
+		});
+	}*/
+
+	function get_pools()
+	{
+		var master = document.getElementById('hmaster').value;
+		fetch('https://node1.stlx.online/server.php?q=gettokensbalance&token=' + master + '&address=' + sca, { mode: 'cors' } )
+		.then(response => response.text())
+		.then((response) => {
+			var obj = JSON.parse(response);
+			document.getElementById('masterliquidity').innerHTML = parseFloat((obj.tokensbalance[master][0] + obj.tokensbalance[master][1]) / 100000000).toFixed(2); //.toLocaleString('en-US');
+		});
+
+		fetch('https://node1.stlx.online/server.php?q=getbalance&address=' + sca, { mode: 'cors' } )
+		.then(response => response.text())
+		.then((response) => {
+			var obj = JSON.parse(response);
+			document.getElementById('slaveliquidity').innerHTML = parseFloat((obj.balance + obj.locked) / 100000000).toFixed(2); //.toLocaleString('en-US');
+		});
+	}
+
+	setInterval(function() {
+		get_pools();
+	}, 30000);
+
+	async function postData(url = '', data = {}) {
+	  // Default options are marked with *
+	  const response = await fetch(url, {
+		method: 'POST', // *GET, POST, PUT, DELETE, etc.
+		mode: 'cors', // no-cors, *cors, same-origin
+		cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+		credentials: 'same-origin', // include, *same-origin, omit
+		headers: {
+		  'Content-Type': 'application/json'
+		  //'Content-Type': 'application/x-www-form-urlencoded',
+		},
+		redirect: 'follow', // manual, *follow, error
+		referrerPolicy: 'no-referrer', // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+		body: data // body data type must match "Content-Type" header
+	  });
+	  return response.json(); // parses JSON response into native JavaScript objects
+	}
+
+	function copytoclipboard() {
+	  /* Get the text field */
+	  var copyText = document.getElementById("address");
+	  /* Select the text field */
+	  copyText.select();
+	  copyText.setSelectionRange(0, 99999); /* For mobile devices */
+	  /* Copy the text inside the text field */
+	  document.execCommand("copy");
+	  /* Alert the copied text */
+	  alert("Copied the text: " + copyText.value);
+	}
+
+	function get_balance()
+	{
+		fetch('https://node1.stlx.online/api/?q=getbalance&address=' + address)
+		.then(response => response.text())
+		.then((response) => {
+			var obj = JSON.parse(response);
+			if(obj.balance > 100000000)	document.getElementById('available').innerHTML = (obj.balance/decimal).toFixed(2) + " STLX";
+			else document.getElementById('available').innerHTML = obj.balance/decimal + " STLX";
+			var prices = ipcRenderer.sendSync('request', "prices");
+			var jprices = JSON.parse(prices);
+			document.getElementById('availableusd').innerHTML = (obj.balance/decimal*jprices.STLX).toFixed(2);
+		});
+	}
+
+	function setbalance(value, src, dest)
+	{
+		var amnt = document.getElementById(src).innerHTML.replace(' STLX', '');
+		amnt = parseFloat(parseFloat(amnt)*value/100);
+		document.getElementById(dest).value = amnt.toFixed(8);
+	}
+
+	function move()
+	{
+		document.getElementById('masteramount').value = "";
+		document.getElementById('slaveamount').value = "";
+		document.getElementById('shareofpool').innerHTML = "0";
+		document.getElementById('slavepermaster').innerHTML = "0";
+		document.getElementById('slavepermaster').innerHTML = "0";
+		if(status == 0)
+		{
+			document.getElementById('swapb').appendChild(document.getElementById('bmasteramount'));
+			document.getElementById('swapa').appendChild(document.getElementById('bslaveamount'));
+			document.getElementById("dslavepermaster").style.display = "none";
+			document.getElementById("dmasterperslave").style.display = ""; 
+			status = 1;
+		}
+		else if(status == 1)
+		{
+			document.getElementById('swapa').appendChild(document.getElementById('bmasteramount'));
+			document.getElementById('swapb').appendChild(document.getElementById('bslaveamount'));
+			document.getElementById("dslavepermaster").style.display = "";
+			document.getElementById("dmasterperslave").style.display = "none"; 
+			status = 0;
+		}
+	}
+	
+	function send()
+	{
+		if(status == 1)
+		{
+			var amount = parseFloat(document.getElementById('slaveamount').value);
+			amount = amount*decimal;
+			var dest = sca;
+			var fee = 800;
+			amount = parseInt(amount);
+			var message = "";
+			var version = "4";
+			var date = Math.round(parseInt(Date.now())/1000)-1;
+			var token = "";
+			var txinfo = amount + "-" + date + "-" + dest + "-"  + fee + "-" + message + "-" + pubkey + "-" + token + "-" + version;
+			ipcRenderer.send('setToSign', txinfo);
+			var signature = ipcRenderer.sendSync('request', "sign");
+			document.getElementById('slaveamount').value = "0";
+			//document.getElementById('sendbutton').classList.add("disabled");
+			if(confirm("Exchange " + amount/decimal + " STLX for " + document.getElementById('hmaster').value + "? Fee: 0.000008 STLX" ))
+			{
+				var txvalues = JSON.stringify({'amount' : amount, 'fee' : fee, 'dest' : dest, 'pubkey' : pubkey, 'date' : date, 'version' : version, 'message' : message, 'signature' : signature, 'token' : token });
+				postData('https://node1.stlx.online/api/?q=transfer', txvalues)
+				  .then(data => {
+					if(data.status == "ERROR")
+					{
+						alert("ERROR: " + data.response);
+					}
+					else
+					{
+						alert("SENT! Hash: " + data.response);
+					}
+					get_balance();
+				  });
+			}
+		}
+		if(status == 0)
+		{
+			var amount = parseFloat(document.getElementById('masteramount').value);
+			amount = amount*decimal;
+			var dest = sca;
+			var fee = 800;
+			amount = parseInt(amount);
+			var message = "";
+			var version = "4";
+			var date = Math.round(parseInt(Date.now())/1000)-1;
+			var token = document.getElementById('hmaster').value;
+			var txinfo = amount + "-" + date + "-" + dest + "-"  + fee + "-" + message + "-" + pubkey + "-" + token + "-" + version;
+			ipcRenderer.send('setToSign', txinfo);
+			var signature = ipcRenderer.sendSync('request', "sign");
+			document.getElementById('masteramount').value = "0";
+			//document.getElementById('sendbutton').classList.add("disabled");
+			if(confirm("Exchange " + amount/decimal + " " + token + " for STLX? Fee: 0.000008 STLX" ))
+			{
+				var txvalues = JSON.stringify({'amount' : amount, 'fee' : fee, 'dest' : dest, 'pubkey' : pubkey, 'date' : date, 'version' : version, 'message' : message, 'signature' : signature, 'token' : token });
+				postData('https://node1.stlx.online/api/?q=transfer', txvalues)
+				  .then(data => {
+					if(data.status == "ERROR")
+					{
+						alert("ERROR: " + data.response);
+					}
+					else
+					{
+						alert("SENT! Hash: " + data.response);
+					}
+					get_balance();
+				  });
+			}
+		}
+	}
+
+	setInterval(function() {
+		if(document.getElementById('address').value != address)
+		{
+			document.getElementById('address').value = address;
+			get_balance();
+			document.getElementById('atomicbutton').classList.remove("disabled");
+		}
+
+	}, 250);
+
+	function quit()
+	{
+		var mining = ipcRenderer.sendSync('request', "exit");
+		return;
+	}
+
+	setInterval(function() {
+		get_balance();
+	}, 30000);
+  </script>
+
+  </head>
+  <body style="text-align:center;">
+    <div style="margin-top:12px;" class="ui container">
+
+		<div class="ui grid">
+		  <div class="four wide column">
+		  <table class="ui inverted table">
+		  <thead>
+		  <th>
+		  <div style="text-align:center;"><img class="ui centered tiny circular image" src="./assets/logo.png" /><br><span style="font-size:14px;">
+		  <span class="ui mini olive label"><i class="server icon"></i>MAINNET NETWORK</span></div>
+		  <div class="ui divider"></div>
+		  <div style="width:100%;">
+		  <table border="0" cellpadding="0" cellspacing="0" style="margin:0;padding:0;width:100%;"><tr><td><i style="display:grid;" class="lock open icon"></i></td>
+		  <td style="text-align:right;"><span id="available" style="font-size:1.3em;">- STLX</span><br><div style="margin-top:8px;"><i><span id="availableusd">-</span> USD</i></div></td></tr></table></div>
+
+		  </thead>
+		  <tbody>
+		  <tr><td><a href="overview.html"><i class="list alternate icon"></i> Overview</a></td></tr>
+		  <tr><td><a href="transactions.html"><i class="envelope icon"></i> Transactions</a></td></tr>
+		  <tr><td><a href="send.html"><i class="paper plane icon"></i> Send</a></td></tr>
+		  <tr><td><a href="staking.html"><i class="database icon"></i> Staking</a></td></tr>
+		  <tr><td><a href="mining.html"><i class="tachometer alternate icon"></i> Mining</a></td></tr>
+		  <tr><td><b><i class="sync icon"></i> Exchange</b></td></tr>
+		  </tbody>
+		  </table>
+		  </div>
+		  <div class="twelve wide column">
+		  <div style="text-align: right;margin-bottom:16px;font-size:16px;">
+			<a href="validator.html"><i class="shield icon"></i></a>
+			<a href="keys.html"><i class="key icon"></i></a>
+			<a href="help.html"><i class="help icon"></i></a>
+			<a href="#null" onclick="quit();"><i class="sign out alternate icon"></i></a>
+		  </div>
+		  <div class="ui tiny action input" style="width:100%;"><input readonly type="text" id="address" ><button onclick="copytoclipboard();" class="ui teal right labeled icon button">
+			<i class="clone icon"></i>
+			Copy
+		  </button></div><div class="ui divider"></div>
+			<div id="send">
+			
+			<div class="ui divider"></div>
+			
+			<table class="ui table inverted">
+        <thead>
+					<th style="width:100%;text-align:center;">
+					<div style="width:100%;text-align:center;display: flex;align-items:center;">
+			<span id="labelctlustlx"><img style="width:32px;height:32px;" id="masterimage1" class="img-fluid rounded-circle" src="./assets/ctlu.png">
+			<img style="width:32px;height:32px;margin-left:-18px;" class="img-fluid rounded-circle" src="./assets/stlx.png"></span>
+
+			<div id="bpools" class="ui tiny left icon input" style="width:50%;">
+				
+			
+			<div class="ui mini form">
+			  <div class="field">
+				<select id="poolslist">
+				  <option value="57owh7oyGk5JFTeNGG4Fy19XRR8pQg7hTZS4HqRucFT5ZLRZKpFfi7CAWFSED9yE4XouyNHV5DUsYeij5vLD2Ro9">CTLU / STLX</option>
+				  <option value="5qwkVizJYm999ppASto46oXYiMB74SA69w84yb5UvUe51nNGQQUwYgUYjQZKWecugVi2PASNb6xn1Zu8z6Ar2zgB">USDX / STLX</option>
+				</select>
+			  </div>
+			</div> <br>
+			</div>
+			
+					</th>
+				</thead>
+        <tbody>
+				<tr>
+					<td style="width:100%;text-align:center;"><div id="swapalabel">YOU PAY:</div>
+					</div><div id="swapa">
+					<div id="bmasteramount" class="ui tiny left icon input" style="width:50%;">
+						 <i class="icon"><img id="masterimage2" style="margin:2px;" class="ui mini image" src="./assets/ctlu.png"></i>
+						 <input type="text" id="masteramount" class="form-control" placeholder="amount">
+						 </div>
+					
+					</div>
+					<br><br>
+					<a onclick="move();" href="#null"><i class="sync yellow big icon"></i></a><br><br><br>
+					<div id="swapb">
+					<div id="swapblabel">YOU GET:</div>
+					</div><div id="bslaveamount" class="ui tiny left icon input" style="width:50%;">
+						 <i class="icon"><img style="margin:2px;" class="ui mini image" src="./assets/stlx.png"></i>
+						 <input type="text" id="slaveamount" class="form-control" placeholder="STLX amount"></div>
+						 </div>
+					</td>
+      </tr>
+	  <tr><td style="width:100%;text-align:center;">
+	  <div style="display:;">Liquidity: <span style="color:#fafafa;"><span id="masterliquidity">0</span> <span id="hmaster1"></span> / <span id="slaveliquidity">0</span> STLX</span><br>
+			<div id="dslavepermaster">1 <span id="hmaster2"></span> = <span id="slavepermaster">0 </span> STLX<br></div>
+			<div id="dmasterperslave" style="display:none;">1 STLX = <span id="masterperslave">0</span> <span id="hmaster3"></span><br></div>
+			Pool Impact: <span id="shareofpool">0</span>%<br><br>
+			 </div>
+			 <a href="#" id="sendbutton" onclick="send();" class="ui button blue"><i class="paper plane icon"></i> SWAP</a>
+			</div>
+	  </td></tr>
+				</tbody>
+			</table>
+			<input type="hidden" id="hmaster">
+			<input type="hidden" id="hslave">
+		  </div>
+		</div>
+	</div>
+	<script>
+	document.getElementById('masteramount').addEventListener('keyup', usl, false);
+		function usl(e) {
+		  var masterbalance = parseFloat(parseFloat(document.getElementById('masterliquidity').innerHTML) + parseFloat(e.target.value));
+		  var ratio = parseFloat(document.getElementById('slaveliquidity').innerHTML) / masterbalance;
+		  var rewardamount = parseFloat(parseFloat(e.target.value)*0.997*ratio);
+		  document.getElementById('slavepermaster').innerHTML = ratio.toFixed(8);
+		  document.getElementById('slaveamount').value =  rewardamount.toFixed(8);;
+		  document.getElementById('shareofpool').innerHTML = parseFloat(parseFloat(document.getElementById('masteramount').value) / parseFloat(parseFloat(document.getElementById('masteramount').value) + parseFloat(document.getElementById('masterliquidity').innerHTML))*100).toFixed(2);
+		}
+
+		document.getElementById('slaveamount').addEventListener('keyup', uma, false);
+		function uma(e) {
+		  var slavebalance = parseFloat(parseFloat(document.getElementById('slaveliquidity').innerHTML) + parseFloat(e.target.value));
+		  var ratio = parseFloat(document.getElementById('masterliquidity').innerHTML) / slavebalance;
+		  var rewardamount = parseFloat(parseFloat(e.target.value)*0.997*ratio);
+		  document.getElementById('masterperslave').innerHTML = ratio.toFixed(8);
+		  document.getElementById('masteramount').value =  rewardamount.toFixed(8);;
+		  //document.getElementById('slaveamount').value = parseFloat(parseFloat(e.target.value).toFixed(8) * parseFloat(document.getElementById('masterperslave').innerHTML).toFixed(8)).toFixed(8);
+		  document.getElementById('shareofpool').innerHTML = parseFloat(parseFloat(document.getElementById('slaveamount').value) / parseFloat(parseFloat(document.getElementById('slaveamount').value) + parseFloat(document.getElementById('slaveliquidity').innerHTML))*100).toFixed(2);
+		}
+		
+		document.getElementById('poolslist').addEventListener('change', upl, false);
+		function upl(e) {
+				window.location.href = "exchange.html?contract=" + document.getElementById('poolslist').value;
+		}
+		
+		if(queryDict["contract"].length > 75)
+		{
+			var sc = queryDict["contract"];
+			document.getElementById('poolslist').value = sc;			
+			var sca = "STLX" + sc;
+			fetch('https://node1.stlx.online/server.php?q=getcontractinfo&sc=' + sc, { mode: 'cors' } )
+			.then(response => response.text())
+			.then((response) => {
+				var obj = JSON.parse(response);
+				document.getElementById('hmaster').value = obj.scinfo[0].pair.master;
+				document.getElementById('masteramount').placeholder = obj.scinfo[0].pair.master + " amount";
+				
+				document.getElementById('masterimage1').src = "./assets/" + obj.scinfo[0].pair.master + ".png";
+				document.getElementById('masterimage2').src = "./assets/" + obj.scinfo[0].pair.master + ".png";
+				
+				document.getElementById('hmaster1').innerHTML = document.getElementById('hmaster').value;
+				document.getElementById('hmaster2').innerHTML = document.getElementById('hmaster').value;
+				document.getElementById('hmaster3').innerHTML = document.getElementById('hmaster').value;
+				get_pools();
+			});
+		}
+		
+		if(queryDict["status"] == 1) move();
+		
+		
+
+	</script>
+</body>
+</html>

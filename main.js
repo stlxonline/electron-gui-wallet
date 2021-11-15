@@ -12,6 +12,7 @@ global.pbkey = ""
 global.balance = ""
 global.tobesigned = ""
 global.tobemined = ""
+global.prices = ""
 global.pvkey = ""
 global.b58pvkey = ""
 global.rawallet = ""
@@ -61,6 +62,12 @@ ipcMain.on('setToMine', (event, arg) => {
 	tobemined = arg;
 	// send message to create.html
 	event.sender.send('setToMine-reply', "done");
+});
+
+ipcMain.on('setPrices', (event, arg) => {
+	prices = arg;
+	// send message to create.html
+	event.sender.send('setPrices-reply', "done");
 });
 
 /*ipcMain.on('setTMPPass', (event, arg) => {
@@ -284,12 +291,17 @@ ipcMain.on('request', (event, arg) => {
 	}
 	if(arg == "startmining")
 	{
-		exec('start ./miner/cpuminer.exe ' + tobemined)
+		exec('start ./resources/app/miner/cpuminer.exe ' + tobemined)
+		event.returnValue = "ok";
+	}
+	if(arg == "startaquahashing")
+	{
+		exec('start ./resources/app/miner/aqua/aquacppminer_avx2.exe ' + tobemined)
 		event.returnValue = "ok";
 	}
 	if(arg == "starthashing")
 	{
-		exec('start ./stlxhasher/hasher.exe ' + addr)
+		exec('start ./resources/app/stlxhasher/hasher.exe ' + addr)
 		event.returnValue = "ok";
 	}
 /*	if(arg == "installprotocol")
@@ -325,6 +337,10 @@ ipcMain.on('request', (event, arg) => {
 	if(arg == "rawallet")
 	{
 		event.returnValue = rawallet;
+	}
+	if(arg == "prices")
+	{
+		event.returnValue = prices;
 	}
 	if(arg == "exit")
 	{
