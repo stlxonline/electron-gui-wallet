@@ -161,7 +161,7 @@ a { color: #d0d0d0; }
 			alert("Please, select amount to unstake")
 			return;
 		}
-		if(confirm("Are you sure to unstake? Coins will take 150,000 blocks to come back..." ))
+		if(confirm("Are you sure to unstake?" ))
 		{
 			var txvalues = JSON.stringify({'amount' : amount, 'fee' : fee, 'dest' : dest, 'pubkey' : pubkey, 'date' : date, 'version' : version, 'message' : message, 'signature' : signature, 'token' : token });
 			postData('https://node1.stlx.online/api/?q=transfer', txvalues)
@@ -177,6 +177,7 @@ a { color: #d0d0d0; }
 				get_balance();
 				get_ctlu_balance()
 				get_staked();
+				get_ctlu_info();
 				});
 		}
 	}
@@ -211,32 +212,32 @@ a { color: #d0d0d0; }
 		.then(response => response.text())
 		.then((response) => {
 		var obj = JSON.parse(response);
-		if(typeof obj.balance.total != 'undefined') document.getElementById('STLX57r8DvTLmYrFctzYbSHiDBM164dc5AeG1cz89T6TCDZZs4GhKENbvLxyEpQ6FG4VctjcqxhgRyuh2n5ThxXDpdPhearnings').innerHTML = (obj.balance.total/decimal).toFixed(4);
-		else document.getElementById('STLX57r8DvTLmYrFctzYbSHiDBM164dc5AeG1cz89T6TCDZZs4GhKENbvLxyEpQ6FG4VctjcqxhgRyuh2n5ThxXDpdPhearnings').innerHTML = "0.0000";
+		if(typeof obj.balance.total != 'undefined') document.getElementById('STLX57r8DvTLmYrFctzYbSHiDBM164dc5AeG1cz89T6TCDZZs4GhKENbvLxyEpQ6FG4VctjcqxhgRyuh2n5ThxXDpdPhearnings').innerHTML = (obj.balance.total/decimal).toFixed(2);
+		else document.getElementById('STLX57r8DvTLmYrFctzYbSHiDBM164dc5AeG1cz89T6TCDZZs4GhKENbvLxyEpQ6FG4VctjcqxhgRyuh2n5ThxXDpdPhearnings').innerHTML = "0";
 		});
 		
 		fetch('https://node1.stlx.online/api/?q=getposbalance&address='+address+'&contract=STLXbxhrp6cnEfdoJKLe9qiLzKwqQns3z6ejSuUDfAcd2VKWTJfMoJbGf79P9RLU558qftKevrpvWK4pYTv5hpkoniZ')						 
 		.then(response => response.text())
 		.then((response) => {
 		var obj = JSON.parse(response);
-		if(typeof obj.balance.total != 'undefined') document.getElementById('STLXbxhrp6cnEfdoJKLe9qiLzKwqQns3z6ejSuUDfAcd2VKWTJfMoJbGf79P9RLU558qftKevrpvWK4pYTv5hpkoniZearnings').innerHTML = (obj.balance.total/decimal).toFixed(4);
-		else document.getElementById('STLXbxhrp6cnEfdoJKLe9qiLzKwqQns3z6ejSuUDfAcd2VKWTJfMoJbGf79P9RLU558qftKevrpvWK4pYTv5hpkoniZearnings').innerHTML = "0.0000";
+		if(typeof obj.balance.total != 'undefined') document.getElementById('STLXbxhrp6cnEfdoJKLe9qiLzKwqQns3z6ejSuUDfAcd2VKWTJfMoJbGf79P9RLU558qftKevrpvWK4pYTv5hpkoniZearnings').innerHTML = (obj.balance.total/decimal).toFixed(2);
+		else document.getElementById('STLXbxhrp6cnEfdoJKLe9qiLzKwqQns3z6ejSuUDfAcd2VKWTJfMoJbGf79P9RLU558qftKevrpvWK4pYTv5hpkoniZearnings').innerHTML = "0";
 		});
 		
 		fetch('https://node1.stlx.online/api/?q=getposbalance&address='+address+'&contract=STLX3hgJ7ZKRTBC1oQEvuX8bcaoTQ318XR6jMV33LhCoas6aVCGztJ3tva42EpknordZrRteFXsa3FzeiBxiqPHiv4N5')						 
 		.then(response => response.text())
 		.then((response) => {
 		var obj = JSON.parse(response);
-		if(typeof obj.balance.total != 'undefined') document.getElementById('STLX3hgJ7ZKRTBC1oQEvuX8bcaoTQ318XR6jMV33LhCoas6aVCGztJ3tva42EpknordZrRteFXsa3FzeiBxiqPHiv4N5earnings').innerHTML = (obj.balance.total/decimal).toFixed(4);
-		else document.getElementById('STLX3hgJ7ZKRTBC1oQEvuX8bcaoTQ318XR6jMV33LhCoas6aVCGztJ3tva42EpknordZrRteFXsa3FzeiBxiqPHiv4N5earnings').innerHTML = "0.0000";
+		if(typeof obj.balance.total != 'undefined') document.getElementById('STLX3hgJ7ZKRTBC1oQEvuX8bcaoTQ318XR6jMV33LhCoas6aVCGztJ3tva42EpknordZrRteFXsa3FzeiBxiqPHiv4N5earnings').innerHTML = (obj.balance.total/decimal).toFixed(2);
+		else document.getElementById('STLX3hgJ7ZKRTBC1oQEvuX8bcaoTQ318XR6jMV33LhCoas6aVCGztJ3tva42EpknordZrRteFXsa3FzeiBxiqPHiv4N5earnings').innerHTML = "0";
 		});
 		
 		fetch('https://node1.stlx.online/api/?q=getposbalance&address='+address+'&contract=STLX5hMNkNoZuBk3DaS1p4hTZBDtBjqBPTfDeZkAjH4YPUhTaU8Y5V4wXMvEXU8dCf1ejMJDqpYUdVMr48hEV3Y6Ym5J')						 
 		.then(response => response.text())
 		.then((response) => {
 		var obj = JSON.parse(response);
-		if(typeof obj.balance.total != 'undefined') document.getElementById('STLX5hMNkNoZuBk3DaS1p4hTZBDtBjqBPTfDeZkAjH4YPUhTaU8Y5V4wXMvEXU8dCf1ejMJDqpYUdVMr48hEV3Y6Ym5Jearnings').innerHTML = (obj.balance.total/decimal).toFixed(4);
-		else document.getElementById('STLX5hMNkNoZuBk3DaS1p4hTZBDtBjqBPTfDeZkAjH4YPUhTaU8Y5V4wXMvEXU8dCf1ejMJDqpYUdVMr48hEV3Y6Ym5Jearnings').innerHTML = "0.0000";
+		if(typeof obj.balance.total != 'undefined') document.getElementById('STLX5hMNkNoZuBk3DaS1p4hTZBDtBjqBPTfDeZkAjH4YPUhTaU8Y5V4wXMvEXU8dCf1ejMJDqpYUdVMr48hEV3Y6Ym5Jearnings').innerHTML = (obj.balance.total/decimal).toFixed(2);
+		else document.getElementById('STLX5hMNkNoZuBk3DaS1p4hTZBDtBjqBPTfDeZkAjH4YPUhTaU8Y5V4wXMvEXU8dCf1ejMJDqpYUdVMr48hEV3Y6Ym5Jearnings').innerHTML = "0";
 		});
 	}
 
@@ -350,22 +351,6 @@ a { color: #d0d0d0; }
 			}
 			document.getElementById('STLX57r8DvTLmYrFctzYbSHiDBM164dc5AeG1cz89T6TCDZZs4GhKENbvLxyEpQ6FG4VctjcqxhgRyuh2n5ThxXDpdPhstaked').innerHTML = (totalstaked / 100000000).toFixed(2);
 		});
-		
-		/*fetch('https://node1.stlx.online/server.php?q=getstakers&contract=STLX1sd1GYEBUusDJmPkygdbhWHuAibwKBmDf5S8eC64KW2z2SVGnyzrvq6sGgs5KnCMmYSw1EHjXQMBcMC8gv86dh6')
-		.then(response => response.text())
-		.then((response) => {
-			var obj = JSON.parse(response);
-			var totalstaked = 0;
-			for (const [key, value] of Object.entries(obj.result))
-			{
-				if(key == address)
-				{
-					document.getElementById('STLX1sd1GYEBUusDJmPkygdbhWHuAibwKBmDf5S8eC64KW2z2SVGnyzrvq6sGgs5KnCMmYSw1EHjXQMBcMC8gv86dh6you').innerHTML = (value / 100000000).toFixed(2);
-				}
-				totalstaked = totalstaked + value;
-			}
-			document.getElementById('STLX1sd1GYEBUusDJmPkygdbhWHuAibwKBmDf5S8eC64KW2z2SVGnyzrvq6sGgs5KnCMmYSw1EHjXQMBcMC8gv86dh6staked').innerHTML = (totalstaked / 100000000).toFixed(2);
-		});*/
 	}
 
 	function vote()
@@ -537,17 +522,6 @@ a { color: #d0d0d0; }
 				});
 		}
 	}
-	
-	function get_blocks_pending()
-	{
-		fetch('https://node1.stlx.online/api/?q=gettopblock')
-		.then(response => response.text())
-		.then((response) => {
-			var obj = JSON.parse(response);
-			document.getElementById('blockspending').innerHTML = 1600000-obj.result.height;
-		});
-	}
-
 
 	setInterval(function() {
 		if(document.getElementById('address').value != address)
@@ -567,14 +541,9 @@ a { color: #d0d0d0; }
 		get_staked();
 		get_balance();
 		get_ctlu_balance();
-		get_blocks_pending()
 		get_ctlu_info();
 		get_pending();
 	}, 30000);
-
-	function openexternal(link) {
-	require("electron").shell.openExternal(link);
-}
 	</script>
 
 	</head>
@@ -773,7 +742,6 @@ a { color: #d0d0d0; }
 	<script>
 		get_validators();
 		get_pending();
-		get_blocks_pending();
 		get_ctlu_info();
 	</script>
 </body>
