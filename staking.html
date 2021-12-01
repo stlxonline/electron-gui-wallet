@@ -528,8 +528,11 @@ a { color: #d0d0d0; }
 				{
 					alert("SENT! Hash: " + data.response);
 					get_balance();
-					document.getElementById('pending').innerHTML = "0";
-					document.getElementById('posclaim').classList.add("disabled");
+					if(dest == "STLXffffffffff")
+					{
+						document.getElementById('pending').innerHTML = "0";
+						document.getElementById('posclaim').classList.add("disabled");
+					}
 				}
 				});
 		}
