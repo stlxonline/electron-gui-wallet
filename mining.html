@@ -24,65 +24,20 @@ h2 { color: #fff; }
 }
 a { color: #d0d0d0; }
 </style>
-</head>
+<script src="./js/common.js"></script>
   <script>
 	const decimal = 100000000;
 	const {ipcRenderer} = require('electron');
-	// send password to main.js
+
 	var address = ipcRenderer.sendSync('request', "address" );
 	var pubkey = ipcRenderer.sendSync('request', "pubkey" );
-
-	async function postData(url = '', data = {}) {
-	  // Default options are marked with *
-	  const response = await fetch(url, {
-		method: 'POST', // *GET, POST, PUT, DELETE, etc.
-		mode: 'cors', // no-cors, *cors, same-origin
-		cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
-		credentials: 'same-origin', // include, *same-origin, omit
-		headers: {
-		  'Content-Type': 'application/json'
-		  //'Content-Type': 'application/x-www-form-urlencoded',
-		},
-		redirect: 'follow', // manual, *follow, error
-		referrerPolicy: 'no-referrer', // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
-		body: data // body data type must match "Content-Type" header
-	  });
-	  return response.json(); // parses JSON response into native JavaScript objects
-	}
-
-	function copytoclipboard() {
-	  /* Get the text field */
-	  var copyText = document.getElementById("address");
-	  /* Select the text field */
-	  copyText.select();
-	  copyText.setSelectionRange(0, 99999); /* For mobile devices */
-	  /* Copy the text inside the text field */
-	  document.execCommand("copy");
-	  /* Alert the copied text */
-	  alert("Copied the text: " + copyText.value);
-	}
-
-	function get_balance()
-	{
-		fetch('https://node1.stlx.online/api/?q=getbalance&address=' + address)
-		.then(response => response.text())
-		.then((response) => {
-			var obj = JSON.parse(response);
-			if(obj.balance > 100000000)	document.getElementById('available').innerHTML = (obj.balance/decimal).toFixed(2) + " STLX";
-			else document.getElementById('available').innerHTML = obj.balance/decimal + " STLX";
-			var prices = ipcRenderer.sendSync('request', "prices");
-			var jprices = JSON.parse(prices);
-			document.getElementById('availableusd').innerHTML = (obj.balance/decimal*jprices.STLX).toFixed(2);
-		});
-	}
-
 	function get_coins()
 	{
 		fetch('https://node1.stlx.online/api/?q=getcoinaddresses&address=' + address)
 		.then(response => response.text())
 		.then((response) => {
 			var obj = JSON.parse(response);
-			if(obj.result.cpu != "")
+			/*if(obj.result.cpu != "")
 			{
 				document.getElementById('cpuaddress').value = obj.result.cpu;
 				document.getElementById('cpusync').classList.add("disabled");
@@ -119,7 +74,7 @@ a { color: #d0d0d0; }
 			else
 			{
 				document.getElementById('ytnsync').classList.remove("disabled");
-			}
+			}*/
 
 			if(obj.result.hac != "")
 			{
@@ -174,12 +129,6 @@ a { color: #d0d0d0; }
 		return;
 	}
 
-	function quit()
-	{
-		var mining = ipcRenderer.sendSync('request', "exit");
-		return;
-	}
-
 	setInterval(function() {
 		if(document.getElementById('address').value != address)
 		{
@@ -197,10 +146,6 @@ a { color: #d0d0d0; }
 		get_balance();
 		get_coins();
 	}, 30000);
-
-		function openexternal(link) {
-  require("electron").shell.openExternal(link);
-}
   </script>
 
   </head>
@@ -281,7 +226,6 @@ a { color: #d0d0d0; }
 					</td>
 			</tr>
 			</table>
-			
 			<!--<table class="ui inverted table">
 			<tr>
 				<td>
@@ -299,7 +243,8 @@ a { color: #d0d0d0; }
 			</tr>
 			<tr>
 				<td>
-					<select id="hacthreads" style="width:50%;" class="ui search dropdown">
+				
+					<select id="hacthreads" style="width:40%;" class="ui search dropdown">
 					  <option value="1">1 thread</option>
 					  <option value="2">2 threads</option>
 					  <option value="3">3 threads</option>
@@ -316,8 +261,25 @@ a { color: #d0d0d0; }
 					  <option value="64">64 threads</option>
 					  <option value="128">128 threads</option>
 					</select>
-					<a style="margin-left:8px;" href="#null" onclick="starthachashing();" class="ui button green"><i class="tachometer alternate icon"></i> START</a>
-					<br><br>
+				
+					<div id="hacinput" style="margin-left:8px;width:50%;" class="ui labeled action input">
+					  <div class="ui image label">
+						<img src="./assets/hac.png">
+					  </div>
+					  <input type="text" id="hacaddress" placeholder="YOUR HACASH ADDRESS HERE">
+					  <a id="hacsync" onclick="sync_coin('hac');" class="ui disabled green right labeled icon button">
+						<i class="tachometer alternate icon"></i>
+						Start
+					  </a>
+					  <a style="display:none;" id="hacmine" href="mining_hac.html" class="ui green right labeled icon button">
+						<i class="tachometer alternate icon"></i>
+						Start
+					  </a>
+					</div>
+				
+					
+					<!--<a style="margin-left:8px;" href="#null" onclick="starthachashing();" class="ui button green"><i class="tachometer alternate icon"></i> START</a>-->
+					<!--<br><br>
 					<span class="ui mini label">HAC + STLX Payments every hour</span>
 				</td>
 			</tr>

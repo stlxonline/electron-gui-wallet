@@ -1,19 +1,19 @@
 <!DOCTYPE html>
 <html>
-  <head>
-  <meta charset="utf-8" />
-    <title>STLX GUI Wallet</title>
+	<head>
+	<meta charset="utf-8" />
+		<title>STLX GUI Wallet</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.js" integrity="sha512-dqw6X88iGgZlTsONxZK9ePmJEFrmHwpuMrsUChjAw1mRUhUITE5QU9pkcSox+ynfLhL15Sv2al5A0LVyDCmtUw==" crossorigin="anonymous"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.css" integrity="sha512-8bHTC73gkZ7rZ7vpqUQThUDhqcNFyYi2xgDgPDHc+GXVGHXq+xPjynxIopALmOPqzo9JZj0k6OqqewdGO3EsrQ==" crossorigin="anonymous" />
 <style>
 body {
 
-  margin: 0;
-  padding: 0;
-  color: #fff;
-  background: #555;
-  padding: 20px;
-  overflow-x: hidden;
+	margin: 0;
+	padding: 0;
+	color: #fff;
+	background: #555;
+	padding: 20px;
+	overflow-x: hidden;
 
 }
 h2 { color: #fff; }
@@ -24,93 +24,15 @@ h2 { color: #fff; }
 }
 a { color: #d0d0d0; }
 </style>
-</head>
-  <script>
+	<script src="./js/common.js"></script>
+	<script>
 	const decimal = 100000000;
 	const {ipcRenderer} = require('electron');
-	// send password to main.js
+
 	var address = ipcRenderer.sendSync('request', "address" );
 	var pubkey = ipcRenderer.sendSync('request', "pubkey" );
-  var votingaddress = "";
-  var ctluaddress = "";
-
-	async function postData(url = '', data = {}) {
-	  // Default options are marked with *
-	  const response = await fetch(url, {
-		method: 'POST', // *GET, POST, PUT, DELETE, etc.
-		mode: 'cors', // no-cors, *cors, same-origin
-		cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
-		credentials: 'same-origin', // include, *same-origin, omit
-		headers: {
-		  'Content-Type': 'application/json'
-		  //'Content-Type': 'application/x-www-form-urlencoded',
-		},
-		redirect: 'follow', // manual, *follow, error
-		referrerPolicy: 'no-referrer', // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
-		body: data // body data type must match "Content-Type" header
-	  });
-	  return response.json(); // parses JSON response into native JavaScript objects
-	}
-
-	function quit()
-	{
-		var mining = ipcRenderer.sendSync('request', "exit");
-		return;
-	}
-
-	function timeSince(date) {
-
-	  var seconds = Math.floor(new Date() / 1000) - date;
-
-	  var interval = seconds / 31536000;
-
-	  if (interval > 1) {
-		return Math.floor(interval) + " years ago";
-	  }
-	  interval = seconds / 2592000;
-	  if (interval > 1) {
-		return Math.floor(interval) + " months ago";
-	  }
-	  interval = seconds / 86400;
-	  if (interval > 1) {
-		return Math.floor(interval) + " days ago";
-	  }
-	  interval = seconds / 3600;
-	  if (interval > 1) {
-		return Math.floor(interval) + " hours ago";
-	  }
-	  interval = seconds / 60;
-	  if (interval > 1) {
-		return Math.floor(interval) + " minutes ago";
-	  }
-	  return Math.floor(seconds) + " seconds ago";
-	}
-
-	function copytoclipboard() {
-	  /* Get the text field */
-	  var copyText = document.getElementById("address");
-	  /* Select the text field */
-	  copyText.select();
-	  copyText.setSelectionRange(0, 99999); /* For mobile devices */
-	  /* Copy the text inside the text field */
-	  document.execCommand("copy");
-	  /* Alert the copied text */
-	  alert("Copied the text: " + copyText.value);
-	}
-
-	function get_balance()
-	{
-		fetch('https://node1.stlx.online/api/?q=getbalance&address=' + address)
-		.then(response => response.text())
-		.then((response) => {
-			var obj = JSON.parse(response);
-			if(obj.balance > 100000000)	document.getElementById('available').innerHTML = (obj.balance/decimal).toFixed(2) + " STLX";
-			else document.getElementById('available').innerHTML = obj.balance/decimal + " STLX";
-			var prices = ipcRenderer.sendSync('request', "prices");
-			var jprices = JSON.parse(prices);
-			document.getElementById('availableusd').innerHTML = (obj.balance/decimal*jprices.STLX).toFixed(2);
-		});
-	}
+	var votingaddress = "";
+	var ctluaddress = "";
 
 	function setbalance(value, src, dest)
 	{
@@ -119,7 +41,7 @@ a { color: #d0d0d0; }
 		document.getElementById(dest).value = amnt.toFixed(8);
 	}
 
-  function setvotingaddress(address)
+	function setvotingaddress(address)
 	{
 		votingaddress = address;
 		get_validators();
@@ -134,6 +56,7 @@ a { color: #d0d0d0; }
 			document.getElementById("ctlu2").classList.remove("green");
 			document.getElementById("ctlu3").classList.remove("green");
 			document.getElementById("ctlu4").classList.remove("green");
+			document.getElementById("ctlu5").classList.remove("green");
 		}
 		if(show == 2)
 		{
@@ -141,6 +64,7 @@ a { color: #d0d0d0; }
 			document.getElementById("ctlu2").classList.add("green");
 			document.getElementById("ctlu3").classList.remove("green");
 			document.getElementById("ctlu4").classList.remove("green");
+			document.getElementById("ctlu5").classList.remove("green");
 		}
 		if(show == 3)
 		{
@@ -148,6 +72,7 @@ a { color: #d0d0d0; }
 			document.getElementById("ctlu2").classList.remove("green");
 			document.getElementById("ctlu3").classList.add("green");
 			document.getElementById("ctlu4").classList.remove("green");
+			document.getElementById("ctlu5").classList.remove("green");
 		}
 		if(show == 4)
 		{
@@ -155,6 +80,15 @@ a { color: #d0d0d0; }
 			document.getElementById("ctlu2").classList.remove("green");
 			document.getElementById("ctlu3").classList.remove("green");
 			document.getElementById("ctlu4").classList.add("green");
+			document.getElementById("ctlu5").classList.remove("green");
+		}
+		if(show == 5)
+		{
+			document.getElementById("ctlu1").classList.remove("green");
+			document.getElementById("ctlu2").classList.remove("green");
+			document.getElementById("ctlu3").classList.remove("green");
+			document.getElementById("ctlu4").classList.remove("green");
+			document.getElementById("ctlu5").classList.add("green");
 		}
 	}
 
@@ -206,13 +140,14 @@ a { color: #d0d0d0; }
 		}
 	}
 
-	function unstake()
+	function unstake(contract)
 	{
 		amount = 0;
-		var dest = "STLX0000000001";
-		var fee = 300;
+		var dest = contract;
+		var fee = 900;
 		var uamount = parseInt(document.getElementById('uamount').value*decimal);
-		var message = "unstake;" + uamount;
+		if(uamount > 0 ) var message = "unstake;" + uamount;
+		else var message = "unstake";
 		var version = "4";
 		var date = Math.round(parseInt(Date.now())/1000)-1;
 		var token = "";
@@ -221,11 +156,16 @@ a { color: #d0d0d0; }
 		var signature = ipcRenderer.sendSync('request', "sign");
 		document.getElementById('uamount').value = "";
 		//document.getElementById('sendbutton').classList.add("disabled");
-		if(confirm("Are you sure to unstake? Coins will take 720 blocks to come back..." ))
+		if(uamount	< 1 && dest == "STLX0000000001")
+		{
+			alert("Please, select amount to unstake")
+			return;
+		}
+		if(confirm("Are you sure to unstake? Coins will take 150,000 blocks to come back..." ))
 		{
 			var txvalues = JSON.stringify({'amount' : amount, 'fee' : fee, 'dest' : dest, 'pubkey' : pubkey, 'date' : date, 'version' : version, 'message' : message, 'signature' : signature, 'token' : token });
 			postData('https://node1.stlx.online/api/?q=transfer', txvalues)
-			  .then(data => {
+				.then(data => {
 				if(data.status == "ERROR")
 				{
 					alert("ERROR: " + data.response);
@@ -237,7 +177,7 @@ a { color: #d0d0d0; }
 				get_balance();
 				get_ctlu_balance()
 				get_staked();
-			  });
+				});
 		}
 	}
 
@@ -251,15 +191,54 @@ a { color: #d0d0d0; }
 			});
 	}
 
-  function get_pending()
-  {
-    fetch('https://node1.stlx.online/api/?q=getposbalance&address=' + address)
-      .then(response => response.text())
-      .then((response) => {
-        var obj = JSON.parse(response);
-        document.getElementById('pending').innerHTML = obj.balance.total/decimal;
-      });
-  }
+	function get_pending()
+	{
+		fetch('https://node1.stlx.online/api/?q=getposbalance&address=' + address)
+			.then(response => response.text())
+			.then((response) => {
+				var obj = JSON.parse(response);
+				document.getElementById('pending').innerHTML = obj.balance.total/decimal;
+		if(obj.balance.total == 0) document.getElementById('posclaim').classList.add("disabled");
+		else document.getElementById('posclaim').classList.remove("disabled");
+			});
+		
+		var contracts = ["",
+		"",
+		"",
+		""];
+		
+		fetch('https://node1.stlx.online/api/?q=getposbalance&address='+address+'&contract=STLX57r8DvTLmYrFctzYbSHiDBM164dc5AeG1cz89T6TCDZZs4GhKENbvLxyEpQ6FG4VctjcqxhgRyuh2n5ThxXDpdPh')						 
+		.then(response => response.text())
+		.then((response) => {
+		var obj = JSON.parse(response);
+		if(typeof obj.balance.total != 'undefined') document.getElementById('STLX57r8DvTLmYrFctzYbSHiDBM164dc5AeG1cz89T6TCDZZs4GhKENbvLxyEpQ6FG4VctjcqxhgRyuh2n5ThxXDpdPhearnings').innerHTML = (obj.balance.total/decimal).toFixed(4);
+		else document.getElementById('STLX57r8DvTLmYrFctzYbSHiDBM164dc5AeG1cz89T6TCDZZs4GhKENbvLxyEpQ6FG4VctjcqxhgRyuh2n5ThxXDpdPhearnings').innerHTML = "0.0000";
+		});
+		
+		fetch('https://node1.stlx.online/api/?q=getposbalance&address='+address+'&contract=STLXbxhrp6cnEfdoJKLe9qiLzKwqQns3z6ejSuUDfAcd2VKWTJfMoJbGf79P9RLU558qftKevrpvWK4pYTv5hpkoniZ')						 
+		.then(response => response.text())
+		.then((response) => {
+		var obj = JSON.parse(response);
+		if(typeof obj.balance.total != 'undefined') document.getElementById('STLXbxhrp6cnEfdoJKLe9qiLzKwqQns3z6ejSuUDfAcd2VKWTJfMoJbGf79P9RLU558qftKevrpvWK4pYTv5hpkoniZearnings').innerHTML = (obj.balance.total/decimal).toFixed(4);
+		else document.getElementById('STLXbxhrp6cnEfdoJKLe9qiLzKwqQns3z6ejSuUDfAcd2VKWTJfMoJbGf79P9RLU558qftKevrpvWK4pYTv5hpkoniZearnings').innerHTML = "0.0000";
+		});
+		
+		fetch('https://node1.stlx.online/api/?q=getposbalance&address='+address+'&contract=STLX3hgJ7ZKRTBC1oQEvuX8bcaoTQ318XR6jMV33LhCoas6aVCGztJ3tva42EpknordZrRteFXsa3FzeiBxiqPHiv4N5')						 
+		.then(response => response.text())
+		.then((response) => {
+		var obj = JSON.parse(response);
+		if(typeof obj.balance.total != 'undefined') document.getElementById('STLX3hgJ7ZKRTBC1oQEvuX8bcaoTQ318XR6jMV33LhCoas6aVCGztJ3tva42EpknordZrRteFXsa3FzeiBxiqPHiv4N5earnings').innerHTML = (obj.balance.total/decimal).toFixed(4);
+		else document.getElementById('STLX3hgJ7ZKRTBC1oQEvuX8bcaoTQ318XR6jMV33LhCoas6aVCGztJ3tva42EpknordZrRteFXsa3FzeiBxiqPHiv4N5earnings').innerHTML = "0.0000";
+		});
+		
+		fetch('https://node1.stlx.online/api/?q=getposbalance&address='+address+'&contract=STLX5hMNkNoZuBk3DaS1p4hTZBDtBjqBPTfDeZkAjH4YPUhTaU8Y5V4wXMvEXU8dCf1ejMJDqpYUdVMr48hEV3Y6Ym5J')						 
+		.then(response => response.text())
+		.then((response) => {
+		var obj = JSON.parse(response);
+		if(typeof obj.balance.total != 'undefined') document.getElementById('STLX5hMNkNoZuBk3DaS1p4hTZBDtBjqBPTfDeZkAjH4YPUhTaU8Y5V4wXMvEXU8dCf1ejMJDqpYUdVMr48hEV3Y6Ym5Jearnings').innerHTML = (obj.balance.total/decimal).toFixed(4);
+		else document.getElementById('STLX5hMNkNoZuBk3DaS1p4hTZBDtBjqBPTfDeZkAjH4YPUhTaU8Y5V4wXMvEXU8dCf1ejMJDqpYUdVMr48hEV3Y6Ym5Jearnings').innerHTML = "0.0000";
+		});
+	}
 
 	function get_ctlu_balance()
 	{
@@ -280,29 +259,29 @@ a { color: #d0d0d0; }
 		});
 	}
 
-  function get_validators()
+	function get_validators()
 	{
 		fetch('https://node1.stlx.online/api/?q=getvalidators')
 		.then(response => response.text())
 		.then((response) => {
 			var obj = JSON.parse(response);
-      var optl = obj.result.length;
-      var c = '';
-      c = c + '<br>Choose your prefered validator and vote:<br><table class="ui table inverted"><thead><th>Select</th><th>Address</th><th>Name</th><th>Votes</th><th>APY</th></thead><tbody>';
-      for(var x=0;x<optl;x++)
-      {
-        if(obj.result[x][0] == votingaddress)
-        {
-          c = c + '<tr><td style="width:10%;text-align:center;"><a href="#null" class="ui mini button green" id="vote' + x + '">SELECT</a></td>';
-        }
-        else {
-          c = c + '<tr><td style="width:10%;text-align:center;"><a onclick="setvotingaddress(\'' + obj.result[x][0] + '\');" href="#null" class="ui mini button red" id="vote' + x + '">SELECT</a></td>';
-        }
+			var optl = obj.result.length;
+			var c = '';
+			c = c + '<br>Choose your prefered validator and vote:<br><table class="ui table inverted"><thead><th>Select</th><th>Address</th><th>Name</th><th>Votes</th><th>APY</th></thead><tbody>';
+			for(var x=0;x<optl;x++)
+			{
+				if(obj.result[x][0] == votingaddress)
+				{
+					c = c + '<tr><td style="width:10%;text-align:center;"><a href="#null" class="ui mini button green" id="vote' + x + '">SELECT</a></td>';
+				}
+				else {
+					c = c + '<tr><td style="width:10%;text-align:center;"><a onclick="setvotingaddress(\'' + obj.result[x][0] + '\');" href="#null" class="ui mini button red" id="vote' + x + '">SELECT</a></td>';
+				}
 
-          c = c + '<td style="width:30%;text-align:left;">' + obj.result[x][0].substr(0, 24) + '...</td><td style="width:30%;text-align:left;">' + obj.result[x][1] + '</td><td style="width:15%;text-align:left;">' + obj.result[x][2]/decimal + '</td><td style="width:15%;text-align:left;">??? %</td></tr>';
-      }
-      c = c + '</tbody></table>';
-      document.getElementById('validators').innerHTML = c;
+					c = c + '<td style="width:30%;text-align:left;">' + obj.result[x][0].substr(0, 24) + '...</td><td style="width:30%;text-align:left;">' + obj.result[x][1] + '</td><td style="width:15%;text-align:left;">' + parseInt(obj.result[x][2]/decimal) + '</td><td style="width:15%;text-align:left;">??? %</td></tr>';
+			}
+			c = c + '</tbody></table>';
+			document.getElementById('validators').innerHTML = c;
 		});
 	}
 	
@@ -371,75 +350,113 @@ a { color: #d0d0d0; }
 			}
 			document.getElementById('STLX57r8DvTLmYrFctzYbSHiDBM164dc5AeG1cz89T6TCDZZs4GhKENbvLxyEpQ6FG4VctjcqxhgRyuh2n5ThxXDpdPhstaked').innerHTML = (totalstaked / 100000000).toFixed(2);
 		});
+		
+		/*fetch('https://node1.stlx.online/server.php?q=getstakers&contract=STLX1sd1GYEBUusDJmPkygdbhWHuAibwKBmDf5S8eC64KW2z2SVGnyzrvq6sGgs5KnCMmYSw1EHjXQMBcMC8gv86dh6')
+		.then(response => response.text())
+		.then((response) => {
+			var obj = JSON.parse(response);
+			var totalstaked = 0;
+			for (const [key, value] of Object.entries(obj.result))
+			{
+				if(key == address)
+				{
+					document.getElementById('STLX1sd1GYEBUusDJmPkygdbhWHuAibwKBmDf5S8eC64KW2z2SVGnyzrvq6sGgs5KnCMmYSw1EHjXQMBcMC8gv86dh6you').innerHTML = (value / 100000000).toFixed(2);
+				}
+				totalstaked = totalstaked + value;
+			}
+			document.getElementById('STLX1sd1GYEBUusDJmPkygdbhWHuAibwKBmDf5S8eC64KW2z2SVGnyzrvq6sGgs5KnCMmYSw1EHjXQMBcMC8gv86dh6staked').innerHTML = (totalstaked / 100000000).toFixed(2);
+		});*/
 	}
 
-  function vote()
-  {
-    var amount = parseFloat(document.getElementById('vamount').value);
-    amount = amount*decimal;
-    var dest = "STLXffffffffff";
-    var fee = 300;
-    amount = parseInt(amount);
-    var message = votingaddress;
-    var version = "4";
-    var date = Math.round(parseInt(Date.now())/1000)-1;
-    var token = "GSTLX";
-    var txinfo = amount + "-" + date + "-" + dest + "-"  + fee + "-" + message + "-" + pubkey + "-" + token + "-" + version;
-    ipcRenderer.send('setToSign', txinfo);
-    var signature = ipcRenderer.sendSync('request', "sign");
-    document.getElementById('samount').value = "";
-    //document.getElementById('sendbutton').classList.add("disabled");
-    if(confirm("Vote " + amount/decimal + " GSTLX to " + votingaddress.substr(0, 24) + "...?" ))
-    {
-      var txvalues = JSON.stringify({'amount' : amount, 'fee' : fee, 'dest' : dest, 'pubkey' : pubkey, 'date' : date, 'version' : version, 'message' : message, 'signature' : signature, 'token' : token });
-      postData('https://node1.stlx.online/api/?q=transfer', txvalues)
-        .then(data => {
-        if(data.status == "ERROR")
-        {
-          alert("ERROR: " + data.response);
-        }
-        else
-        {
-          alert("SENT! Hash: " + data.response);
-        }
-        get_ctlu_balance();
-        });
-    }
-  }
-  
-  function ctlustake()
-  {
-    var amount = parseFloat(document.getElementById('camount').value);
-    amount = amount*decimal;
-    var dest = ctluaddress;
-    var fee = 300;
-    amount = parseInt(amount);
-    var message = "";
-    var version = "4";
-    var date = Math.round(parseInt(Date.now())/1000)-1;
-    var token = "CTLU";
-    var txinfo = amount + "-" + date + "-" + dest + "-"  + fee + "-" + message + "-" + pubkey + "-" + token + "-" + version;
-    ipcRenderer.send('setToSign', txinfo);
-    var signature = ipcRenderer.sendSync('request', "sign");
-    document.getElementById('camount').value = "";
-    //document.getElementById('sendbutton').classList.add("disabled");
-    if(confirm("Stake " + amount/decimal + " CTLU to " + dest.substr(0, 24) + "...?" ))
-    {
-      var txvalues = JSON.stringify({'amount' : amount, 'fee' : fee, 'dest' : dest, 'pubkey' : pubkey, 'date' : date, 'version' : version, 'message' : message, 'signature' : signature, 'token' : token });
-      postData('https://node1.stlx.online/api/?q=transfer', txvalues)
-        .then(data => {
-        if(data.status == "ERROR")
-        {
-          alert("ERROR: " + data.response);
-        }
-        else
-        {
-          alert("SENT! Hash: " + data.response);
-        }
-        get_ctlu_balance();
-        });
-    }
-  }
+	function vote()
+	{
+		var amount = parseFloat(document.getElementById('vamount').value);
+		amount = amount*decimal;
+		var dest = "STLXffffffffff";
+		var fee = 300;
+		amount = parseInt(amount);
+		var message = votingaddress;
+		var version = "4";
+		var date = Math.round(parseInt(Date.now())/1000)-1;
+		var token = "GSTLX";
+		var txinfo = amount + "-" + date + "-" + dest + "-"	+ fee + "-" + message + "-" + pubkey + "-" + token + "-" + version;
+		ipcRenderer.send('setToSign', txinfo);
+		var signature = ipcRenderer.sendSync('request', "sign");
+		document.getElementById('samount').value = "";
+		//document.getElementById('sendbutton').classList.add("disabled");
+	if(message.length < 160)
+	{
+		alert("Please, select a validator for vote")
+		return;
+	}
+	if(amount < 1 || isNaN(amount))
+	{
+		alert("Please, select amount to vote")
+		return;
+	}
+		if(confirm("Vote " + amount/decimal + " GSTLX to " + votingaddress.substr(0, 24) + "...?" ))
+		{
+			var txvalues = JSON.stringify({'amount' : amount, 'fee' : fee, 'dest' : dest, 'pubkey' : pubkey, 'date' : date, 'version' : version, 'message' : message, 'signature' : signature, 'token' : token });
+			postData('https://node1.stlx.online/api/?q=transfer', txvalues)
+				.then(data => {
+				if(data.status == "ERROR")
+				{
+					alert("ERROR: " + data.response);
+				}
+				else
+				{
+					alert("SENT! Hash: " + data.response);
+				}
+				get_ctlu_balance();
+		document.getElementById('vamount').value = "";
+				});
+		}
+	}
+	
+	function ctlustake()
+	{
+		var amount = parseFloat(document.getElementById('camount').value);
+		amount = amount*decimal;
+		var dest = ctluaddress;
+		var fee = 300;
+		amount = parseInt(amount);
+		var message = "";
+		var version = "4";
+		var date = Math.round(parseInt(Date.now())/1000)-1;
+		var token = "CTLU";
+		var txinfo = amount + "-" + date + "-" + dest + "-"	+ fee + "-" + message + "-" + pubkey + "-" + token + "-" + version;
+		ipcRenderer.send('setToSign', txinfo);
+		var signature = ipcRenderer.sendSync('request', "sign");
+		document.getElementById('camount').value = "";
+		//document.getElementById('sendbutton').classList.add("disabled");
+	if(dest.length < 50)
+	{
+		alert("Please, select a pool for stake")
+		return;
+	}
+	if(amount < 1 || isNaN(amount))
+	{
+		alert("Please, select amount to stake")
+		return;
+	}
+		if(confirm("Stake " + amount/decimal + " CTLU to " + dest.substr(0, 24) + "...?" ))
+		{
+			var txvalues = JSON.stringify({'amount' : amount, 'fee' : fee, 'dest' : dest, 'pubkey' : pubkey, 'date' : date, 'version' : version, 'message' : message, 'signature' : signature, 'token' : token });
+			postData('https://node1.stlx.online/api/?q=transfer', txvalues)
+				.then(data => {
+				if(data.status == "ERROR")
+				{
+					alert("ERROR: " + data.response);
+				}
+				else
+				{
+					alert("SENT! Hash: " + data.response);
+				}
+		document.getElementById('camount').value = "";
+				get_ctlu_balance();
+				});
+		}
+	}
 
 
 	function send()
@@ -453,16 +470,21 @@ a { color: #d0d0d0; }
 		var version = "4";
 		var date = Math.round(parseInt(Date.now())/1000)-1;
 		var token = "";
-		var txinfo = amount + "-" + date + "-" + dest + "-"  + fee + "-" + message + "-" + pubkey + "-" + token + "-" + version;
+		var txinfo = amount + "-" + date + "-" + dest + "-"	+ fee + "-" + message + "-" + pubkey + "-" + token + "-" + version;
 		ipcRenderer.send('setToSign', txinfo);
 		var signature = ipcRenderer.sendSync('request', "sign");
 		document.getElementById('samount').value = "";
 		//document.getElementById('sendbutton').classList.add("disabled");
-		if(confirm("Stake " + amount/decimal + " STLX? If you unstake, it will take 720 blocks to come back..." ))
+		if(amount < 1 || isNaN(amount))
+		{
+			alert("Please, select amount to stake")
+			return;
+		}
+		if(confirm("Stake " + amount/decimal + " STLX? If you unstake, it will take 150,000 blocks to come back..." ))
 		{
 			var txvalues = JSON.stringify({'amount' : amount, 'fee' : fee, 'dest' : dest, 'pubkey' : pubkey, 'date' : date, 'version' : version, 'message' : message, 'signature' : signature, 'token' : token });
 			postData('https://node1.stlx.online/api/?q=transfer', txvalues)
-			  .then(data => {
+				.then(data => {
 				if(data.status == "ERROR")
 				{
 					alert("ERROR: " + data.response);
@@ -471,32 +493,33 @@ a { color: #d0d0d0; }
 				{
 					alert("SENT! Hash: " + data.response);
 				}
+				document.getElementById('samount').value = "";
 				get_balance();
 				get_ctlu_balance();
 				get_staked();
-        get_pending();
-			  });
+				get_pending();
+				});
 		}
 	}
 	
-	function claim()
+	function claim(contract)
 	{
 		amount = 0;
-		var dest = "STLXffffffffff";
+		var dest = contract;
 		var fee = 900;
 		amount = parseInt(amount);
 		var message = "claim";
 		var version = "4";
 		var date = Math.round(parseInt(Date.now())/1000)-1;
 		var token = "";
-		var txinfo = amount + "-" + date + "-" + dest + "-"  + fee + "-" + message + "-" + pubkey + "-" + token + "-" + version;
+		var txinfo = amount + "-" + date + "-" + dest + "-"	+ fee + "-" + message + "-" + pubkey + "-" + token + "-" + version;
 		ipcRenderer.send('setToSign', txinfo);
 		var signature = ipcRenderer.sendSync('request', "sign");
-		if(confirm("Claim STLX rewards? Fee: 0.00000900 STLX" ))
+		if(confirm("Claim rewards? Fee: 0.00000900 STLX" ))
 		{
 			var txvalues = JSON.stringify({'amount' : amount, 'fee' : fee, 'dest' : dest, 'pubkey' : pubkey, 'date' : date, 'version' : version, 'message' : message, 'signature' : signature, 'token' : token });
 			postData('https://node1.stlx.online/api/?q=transfer', txvalues)
-			  .then(data => {
+				.then(data => {
 				if(data.status == "ERROR")
 				{
 					alert("ERROR: " + data.response);
@@ -506,8 +529,9 @@ a { color: #d0d0d0; }
 					alert("SENT! Hash: " + data.response);
 					get_balance();
 					document.getElementById('pending').innerHTML = "0";
+					document.getElementById('posclaim').classList.add("disabled");
 				}
-			  });
+				});
 		}
 	}
 	
@@ -542,83 +566,83 @@ a { color: #d0d0d0; }
 		get_ctlu_balance();
 		get_blocks_pending()
 		get_ctlu_info();
-    get_pending();
+		get_pending();
 	}, 30000);
 
 	function openexternal(link) {
-  require("electron").shell.openExternal(link);
+	require("electron").shell.openExternal(link);
 }
-  </script>
+	</script>
 
-  </head>
-  <body style="text-align:center;">
-    <div style="margin-top:12px;" class="ui container">
+	</head>
+	<body style="text-align:center;">
+		<div style="margin-top:12px;" class="ui container">
 
 		<div class="ui grid">
-		  <div class="four wide column">
-		  <table class="ui inverted table">
-		  <thead>
-		  <th>
-		  <div style="text-align:center;"><img class="ui centered tiny circular image" src="./assets/logo.png" /><br><span style="font-size:14px;">
-		  <span class="ui mini olive label"><i class="server icon"></i>MAINNET NETWORK</span></div>
-		  <div class="ui divider"></div>
-		  <div style="width:100%;">
-		  <table border="0" cellpadding="0" cellspacing="0" style="margin:0;padding:0;width:100%;"><tr><td><i style="display:grid;" class="lock open icon"></i></td>
-		  <td style="text-align:right;"><span id="available" style="font-size:1.3em;">- STLX</span><br><div style="margin-top:8px;"><i><span id="availableusd">-</span> USD</i></div></td></tr></table></div>
+			<div class="four wide column">
+			<table class="ui inverted table">
+			<thead>
+			<th>
+			<div style="text-align:center;"><img class="ui centered tiny circular image" src="./assets/logo.png" /><br><span style="font-size:14px;">
+			<span class="ui mini olive label"><i class="server icon"></i>MAINNET NETWORK</span></div>
+			<div class="ui divider"></div>
+			<div style="width:100%;">
+			<table border="0" cellpadding="0" cellspacing="0" style="margin:0;padding:0;width:100%;"><tr><td><i style="display:grid;" class="lock open icon"></i></td>
+			<td style="text-align:right;"><span id="available" style="font-size:1.3em;">- STLX</span><br><div style="margin-top:8px;"><i><span id="availableusd">-</span> USD</i></div></td></tr></table></div>
 
-		  </thead>
-		  <tbody>
-		  <tr><td><a href="overview.html"><i class="list alternate icon"></i> Overview</a></td></tr>
-		  <tr><td><a href="transactions.html"><i class="envelope icon"></i> Transactions</a></td></tr>
-		  <tr><td><a href="send.html"><i class="paper plane icon"></i> Send</a></td></tr>
-		  <tr><td><b><i class="database icon"></i> Staking</v></td></tr>
-		  <tr><td><a href="mining.html"><i class="tachometer alternate icon"></i> Mining</a></td></tr>
-		  <tr><td><a href="exchange.html?contract=57owh7oyGk5JFTeNGG4Fy19XRR8pQg7hTZS4HqRucFT5ZLRZKpFfi7CAWFSED9yE4XouyNHV5DUsYeij5vLD2Ro9&status=1"><i class="sync icon"></i> Exchange</a></td></tr>
-		  </tbody>
-		  </table>
-		  </div>
-		  <div class="twelve wide column">
-		  <div style="text-align: right;margin-bottom:16px;font-size:16px;">
+			</thead>
+			<tbody>
+			<tr><td><a href="overview.html"><i class="list alternate icon"></i> Overview</a></td></tr>
+			<tr><td><a href="transactions.html"><i class="envelope icon"></i> Transactions</a></td></tr>
+			<tr><td><a href="send.html"><i class="paper plane icon"></i> Send</a></td></tr>
+			<tr><td><b><i class="database icon"></i> Staking</v></td></tr>
+			<tr><td><a href="mining.html"><i class="tachometer alternate icon"></i> Mining</a></td></tr>
+			<tr><td><a href="exchange.html?contract=57owh7oyGk5JFTeNGG4Fy19XRR8pQg7hTZS4HqRucFT5ZLRZKpFfi7CAWFSED9yE4XouyNHV5DUsYeij5vLD2Ro9&status=1"><i class="sync icon"></i> Exchange</a></td></tr>
+			</tbody>
+			</table>
+			</div>
+			<div class="twelve wide column">
+			<div style="text-align: right;margin-bottom:16px;font-size:16px;">
 			<a href="validator.html"><i class="shield icon"></i></a>
 			<a href="keys.html"><i class="key icon"></i></a>
 			<a href="help.html"><i class="help icon"></i></a>
 			<a href="#null" onclick="quit();"><i class="sign out alternate icon"></i></a>
-		  </div>
-		  <div class="ui tiny action input" style="width:100%;"><input readonly type="text" id="address" ><button onclick="copytoclipboard();" class="ui teal right labeled icon button">
+			</div>
+			<div class="ui tiny action input" style="width:100%;"><input readonly type="text" id="address" ><button onclick="copytoclipboard();" class="ui teal right labeled icon button">
 			<i class="clone icon"></i>
 			Copy
-		  </button></div>
+			</button></div>
 			<div class="ui divider"></div>
 			<table class="ui table inverted">
-        <thead>
+				<thead>
 					<th style="width:30%;text-align:center;">Token</th>
 					<th style="width:30%;text-align:center;">Amounts</th>
 					<th style="width:40%;text-align:right;">Actions</th>
 				</thead>
-        <tbody>
+				<tbody>
 				<tr>
 					<td style="width:30%;"><img src="./assets/ctlu.png" class="ui image circular avatar mini" /> Cthulu <i>(CTLU)</i></td>
 					<td style="width:30%;text-align:right;"><span id="ctluavailable">0</span> CTLU</td>
 					<td style="width:40%;text-align:right;">
 					<a style="margin:2px;" href="exchange.html?contract=57owh7oyGk5JFTeNGG4Fy19XRR8pQg7hTZS4HqRucFT5ZLRZKpFfi7CAWFSED9yE4XouyNHV5DUsYeij5vLD2Ro9&status=1" class="ui mini button green">BUY</a>
 					<button style="margin:2px;" id="optctlu" onclick="showopt(4);" class="ui mini button">STAKE</button>
-        </td>
-      </tr>
+				</td>
+			</tr>
 				<tr>
 					<td style="width:30%;"><img src="./assets/gstlx.png" class="ui image circular avatar mini" /> Stellia GOV <i>(SGTLX)</i></td>
 					<td style="width:30%;text-align:right;"><i class="lock green open icon"></i> <span id="gstlxavailable">0</span> GSTLX</td>
 					<td style="width:40%;text-align:right;">
 					<button style="margin:2px;" id="optvote" onclick="showopt(3);" class="ui mini button">VOTE</button>
-        </td>
-      </tr>
+				</td>
+			</tr>
 				<tr>
 					<td style="width:30%;"><img src="./assets/stlx.png" class="ui image circular avatar mini" /> Staked <i>(STLX)</i></td>
 					<td style="width:30%;text-align:right;"><i class="database yellow icon"></i> <span id="stlxstaked">0</span> STLX</td>
 					<td style="width:40%;text-align:right;">
 					<button style="margin:2px;" id="optstake" onclick="showopt(1);" class="ui mini button blue">STAKE</button>
 					<button id="optunstake" style="margin:2px;" onclick="showopt(2);" class="ui mini button">UNSTAKE</button>
-        </td>
-      </tr>
+				</td>
+			</tr>
 					<tr>
 						<td colspan="3">
 						<div id="stake">
@@ -626,10 +650,10 @@ a { color: #d0d0d0; }
 						 <i class="icon"><img style="margin:2px;" class="ui mini image" src="./assets/stlx.png"></i>
 						 <input type="text" id="samount" placeholder="STLX amount to stake">
 						 <button onclick="setbalance(25, 'available', 'samount');" class="ui button">25%</button>
-						  <button onclick="setbalance(50, 'available', 'samount');" class="ui button">50%</button>
-						  <button onclick="setbalance(75, 'available', 'samount');" class="ui button">75%</button>
-						  <button onclick="setbalance(99.999, 'available', 'samount');" class="ui red button">100%</button>
-						  <button id="sendbutton" onclick="send();" class="ui button green">STAKE</button>
+							<button onclick="setbalance(50, 'available', 'samount');" class="ui button">50%</button>
+							<button onclick="setbalance(75, 'available', 'samount');" class="ui button">75%</button>
+							<button onclick="setbalance(99, 'available', 'samount');" class="ui red button">MAX</button>
+							<button id="sendbutton" onclick="send();" class="ui button green">STAKE</button>
 						 </div>
 						</div>
 						<div id="unstake" style="display:none">
@@ -637,10 +661,10 @@ a { color: #d0d0d0; }
 						 <i class="icon"><img style="margin:2px;" class="ui mini image" src="./assets/stlx.png"></i>
 						 <input type="text" id="uamount" placeholder="STLX amount to unstake">
 						 <button onclick="setbalance(25, 'stlxstaked', 'uamount');" class="ui button">25%</button>
-						  <button onclick="setbalance(50, 'stlxstaked', 'uamount');" class="ui button">50%</button>
-						  <button onclick="setbalance(75, 'stlxstaked', 'uamount');" class="ui button">75%</button>
-						  <button onclick="setbalance(100, 'stlxstaked', 'uamount');" class="ui red button">100%</button>
-						  <button id="sendbutton" onclick="unstake();" class="ui button green">UNSTAKE</button>
+							<button onclick="setbalance(50, 'stlxstaked', 'uamount');" class="ui button">50%</button>
+							<button onclick="setbalance(75, 'stlxstaked', 'uamount');" class="ui button">75%</button>
+							<button onclick="setbalance(100, 'stlxstaked', 'uamount');" class="ui red button">100%</button>
+							<button id="sendbutton" onclick="unstake('STLX0000000001');" class="ui button green">UNSTAKE</button>
 						 </div>
 						</div>
 						<div id="vote" style="display:none">
@@ -648,10 +672,10 @@ a { color: #d0d0d0; }
  						 <i class="icon"><img style="margin:2px;" class="ui mini image" src="./assets/gstlx.png"></i>
  						 <input type="text" id="vamount" placeholder="GSTLX amount to vote">
  						 <button onclick="setbalance(25, 'gstlxavailable', 'vamount');" class="ui button">25%</button>
- 						  <button onclick="setbalance(50, 'gstlxavailable', 'vamount');" class="ui button">50%</button>
- 						  <button onclick="setbalance(75, 'gstlxavailable', 'vamount');" class="ui button">75%</button>
- 						  <button onclick="setbalance(100, 'gstlxavailable', 'vamount');" class="ui red button">100%</button>
- 						  <button id="sendbutton" onclick="vote();" class="ui button green">VOTE</button>
+ 							<button onclick="setbalance(50, 'gstlxavailable', 'vamount');" class="ui button">50%</button>
+ 							<button onclick="setbalance(75, 'gstlxavailable', 'vamount');" class="ui button">75%</button>
+ 							<button onclick="setbalance(100, 'gstlxavailable', 'vamount');" class="ui red button">100%</button>
+ 							<button id="sendbutton" onclick="vote();" class="ui button green">VOTE</button>
  						 </div>
 						 <div id="validators"></div>
 						</div>
@@ -660,16 +684,15 @@ a { color: #d0d0d0; }
  						 <i class="icon"><img style="margin:2px;" class="ui mini image" src="./assets/ctlu.png"></i>
  						 <input type="text" id="camount" placeholder="CTLU amount to stake">
  						 <button onclick="setbalance(25, 'ctluavailable', 'camount');" class="ui button">25%</button>
- 						  <button onclick="setbalance(50, 'ctluavailable', 'camount');" class="ui button">50%</button>
- 						  <button onclick="setbalance(75, 'ctluavailable', 'camount');" class="ui button">75%</button>
- 						  <button onclick="setbalance(100, 'ctluavailable', 'camount');" class="ui red button">100%</button>
- 						  <button id="sendbutton" onclick="ctlustake();" class="ui button green">STAKE</button>
+ 							<button onclick="setbalance(50, 'ctluavailable', 'camount');" class="ui button">50%</button>
+ 							<button onclick="setbalance(75, 'ctluavailable', 'camount');" class="ui button">75%</button>
+ 							<button onclick="setbalance(100, 'ctluavailable', 'camount');" class="ui red button">100%</button>
+ 							<button id="sendbutton" onclick="ctlustake();" class="ui button green">STAKE</button>
  						 </div>
 						 <div id="ctlupools">
 						 <div class="ui divider"></div>
-						 <div class="ui message yellow" style="text-align:center;">Rewards distribution will start at block 1,600,000.<br>
-						 <b><span id="blockspending"></span></b> blocks pending</div>
 						 <div class="ui message" style="text-align:center;"><a href="#" onclick="openexternal('https://cthulu.finance/staking/rules.html');">STAKING RULES</a></div>
+						 <input type="hidden" id="pearnings">
 						 <table class="ui inverted table">
 						 <tr>
 							<td></td>
@@ -678,43 +701,51 @@ a { color: #d0d0d0; }
 							<td>Your Stakes</td>
 							<td>CTLU Earnings</td>
 							<td style="text-align:right;">Actions</td>
-						  </tr>
-						  <tr>
+							</tr>
+							<tr>
 							<td style="text-align:center;"><img class="ui mini image centered" src="./assets/ctlu.png">
 							<a onclick="setctluaddress('STLX57r8DvTLmYrFctzYbSHiDBM164dc5AeG1cz89T6TCDZZs4GhKENbvLxyEpQ6FG4VctjcqxhgRyuh2n5ThxXDpdPh', 1);" id="ctlu1" href="#null" class="ui mini label">SELECT</a></td>
 							<td>Chulu (CTLU)</td>
 							<td id="STLX57r8DvTLmYrFctzYbSHiDBM164dc5AeG1cz89T6TCDZZs4GhKENbvLxyEpQ6FG4VctjcqxhgRyuh2n5ThxXDpdPhstaked">0.00</td>
 							<td id="STLX57r8DvTLmYrFctzYbSHiDBM164dc5AeG1cz89T6TCDZZs4GhKENbvLxyEpQ6FG4VctjcqxhgRyuh2n5ThxXDpdPhyou">0.00</td>
 							<td id="STLX57r8DvTLmYrFctzYbSHiDBM164dc5AeG1cz89T6TCDZZs4GhKENbvLxyEpQ6FG4VctjcqxhgRyuh2n5ThxXDpdPhearnings">0.00</td>
-							<td style="text-align:right;"><a href="#null" class="ui mini label disabled purple">CLAIM</a> <a href="#null" class="ui mini label disabled red">UNSTAKE</a></td>
-						  </tr>
-						  <tr>
+							<td style="text-align:right;">
+							<a id="STLX57r8DvTLmYrFctzYbSHiDBM164dc5AeG1cz89T6TCDZZs4GhKENbvLxyEpQ6FG4VctjcqxhgRyuh2n5ThxXDpdPhclaim" href="#null" onclick="claim('STLX57r8DvTLmYrFctzYbSHiDBM164dc5AeG1cz89T6TCDZZs4GhKENbvLxyEpQ6FG4VctjcqxhgRyuh2n5ThxXDpdPh');" class="ui mini label  purple">CLAIM</a>
+							<a	id="STLX57r8DvTLmYrFctzYbSHiDBM164dc5AeG1cz89T6TCDZZs4GhKENbvLxyEpQ6FG4VctjcqxhgRyuh2n5ThxXDpdPhunstake" href="#null" onclick="unstake('STLX57r8DvTLmYrFctzYbSHiDBM164dc5AeG1cz89T6TCDZZs4GhKENbvLxyEpQ6FG4VctjcqxhgRyuh2n5ThxXDpdPh');" class="ui mini label  red">UNSTAKE</a></td>
+							</tr>
+							<tr>
 							<td style="text-align:center;"><img class="ui mini image centered" src="./assets/stlx.png">
 							<a onclick="setctluaddress('STLX3hgJ7ZKRTBC1oQEvuX8bcaoTQ318XR6jMV33LhCoas6aVCGztJ3tva42EpknordZrRteFXsa3FzeiBxiqPHiv4N5', 2);" id="ctlu2" href="#null" class="ui mini label">SELECT</a></td>
 							<td>STLX (STLX)</td>
 							<td id="STLX3hgJ7ZKRTBC1oQEvuX8bcaoTQ318XR6jMV33LhCoas6aVCGztJ3tva42EpknordZrRteFXsa3FzeiBxiqPHiv4N5staked">0.00</td>
 							<td id="STLX3hgJ7ZKRTBC1oQEvuX8bcaoTQ318XR6jMV33LhCoas6aVCGztJ3tva42EpknordZrRteFXsa3FzeiBxiqPHiv4N5you">0.00</td>
 							<td id="STLX3hgJ7ZKRTBC1oQEvuX8bcaoTQ318XR6jMV33LhCoas6aVCGztJ3tva42EpknordZrRteFXsa3FzeiBxiqPHiv4N5earnings">0.00</td>
-							<td style="text-align:right;"><a href="#null" class="ui mini label disabled purple">CLAIM</a> <a href="#null" class="ui mini label disabled red">UNSTAKE</a></td>
-						  </tr>
-						  <tr>
+							<td style="text-align:right;">
+							<a id="STLX3hgJ7ZKRTBC1oQEvuX8bcaoTQ318XR6jMV33LhCoas6aVCGztJ3tva42EpknordZrRteFXsa3FzeiBxiqPHiv4N5claim" href="#null" onclick="claim('STLX3hgJ7ZKRTBC1oQEvuX8bcaoTQ318XR6jMV33LhCoas6aVCGztJ3tva42EpknordZrRteFXsa3FzeiBxiqPHiv4N5');" class="ui mini label disabled purple">CLAIM</a>
+							<a id="STLX3hgJ7ZKRTBC1oQEvuX8bcaoTQ318XR6jMV33LhCoas6aVCGztJ3tva42EpknordZrRteFXsa3FzeiBxiqPHiv4N5unstake" href="#null" onclick="unstake('STLX3hgJ7ZKRTBC1oQEvuX8bcaoTQ318XR6jMV33LhCoas6aVCGztJ3tva42EpknordZrRteFXsa3FzeiBxiqPHiv4N5');" class="ui mini label  red">UNSTAKE</a></td>
+							</tr>
+							<tr>
 							<td style="text-align:center;"><img class="ui mini image centered" src="./assets/shib.png">
 							<a onclick="setctluaddress('STLXbxhrp6cnEfdoJKLe9qiLzKwqQns3z6ejSuUDfAcd2VKWTJfMoJbGf79P9RLU558qftKevrpvWK4pYTv5hpkoniZ', 3);" id="ctlu3" href="#null" class="ui mini label">SELECT</a></td>
 							<td>Shiba Inu (SHIB)</td>
 							<td id="STLXbxhrp6cnEfdoJKLe9qiLzKwqQns3z6ejSuUDfAcd2VKWTJfMoJbGf79P9RLU558qftKevrpvWK4pYTv5hpkoniZstaked">0.00</td>
 							<td id="STLXbxhrp6cnEfdoJKLe9qiLzKwqQns3z6ejSuUDfAcd2VKWTJfMoJbGf79P9RLU558qftKevrpvWK4pYTv5hpkoniZyou">0.00</td>
 							<td id="STLXbxhrp6cnEfdoJKLe9qiLzKwqQns3z6ejSuUDfAcd2VKWTJfMoJbGf79P9RLU558qftKevrpvWK4pYTv5hpkoniZearnings">0.00</td>
-							<td style="text-align:right;"><a href="#null" class="ui mini label disabled purple">CLAIM</a> <a href="#null" class="ui mini label disabled red">UNSTAKE</a></td>
-						  </tr>
-						  <tr>
+							<td style="text-align:right;">
+							<a id="STLXbxhrp6cnEfdoJKLe9qiLzKwqQns3z6ejSuUDfAcd2VKWTJfMoJbGf79P9RLU558qftKevrpvWK4pYTv5hpkoniZclaim" href="#null" onclick="claim('STLXbxhrp6cnEfdoJKLe9qiLzKwqQns3z6ejSuUDfAcd2VKWTJfMoJbGf79P9RLU558qftKevrpvWK4pYTv5hpkoniZ');" class="ui mini label  purple">CLAIM</a>
+							<a id="STLXbxhrp6cnEfdoJKLe9qiLzKwqQns3z6ejSuUDfAcd2VKWTJfMoJbGf79P9RLU558qftKevrpvWK4pYTv5hpkoniZunstake" href="#null" onclick="unstake('STLXbxhrp6cnEfdoJKLe9qiLzKwqQns3z6ejSuUDfAcd2VKWTJfMoJbGf79P9RLU558qftKevrpvWK4pYTv5hpkoniZ');" class="ui mini label  red">UNSTAKE</a></td>
+							</tr>
+							<tr>
 							<td style="text-align:center;"><img class="ui mini image centered" src="./assets/aqua.png">
 							<a onclick="setctluaddress('STLX5hMNkNoZuBk3DaS1p4hTZBDtBjqBPTfDeZkAjH4YPUhTaU8Y5V4wXMvEXU8dCf1ejMJDqpYUdVMr48hEV3Y6Ym5J', 4);" id="ctlu4" href="#null" class="ui mini label">SELECT</a></td>
 							<td>Aquachain (AQUA)</td>
 							<td id="STLX5hMNkNoZuBk3DaS1p4hTZBDtBjqBPTfDeZkAjH4YPUhTaU8Y5V4wXMvEXU8dCf1ejMJDqpYUdVMr48hEV3Y6Ym5Jstaked">0.00</td>
 							<td id="STLX5hMNkNoZuBk3DaS1p4hTZBDtBjqBPTfDeZkAjH4YPUhTaU8Y5V4wXMvEXU8dCf1ejMJDqpYUdVMr48hEV3Y6Ym5Jyou">0.00</td>
 							<td id="STLX5hMNkNoZuBk3DaS1p4hTZBDtBjqBPTfDeZkAjH4YPUhTaU8Y5V4wXMvEXU8dCf1ejMJDqpYUdVMr48hEV3Y6Ym5Jearnings">0.00</td>
-							<td style="text-align:right;"><a href="#null" class="ui mini label disabled purple">CLAIM</a> <a href="#null" class="ui mini label disabled red">UNSTAKE</a></td>
-						  </tr>
+							<td style="text-align:right;">
+							<a id="STLX5hMNkNoZuBk3DaS1p4hTZBDtBjqBPTfDeZkAjH4YPUhTaU8Y5V4wXMvEXU8dCf1ejMJDqpYUdVMr48hEV3Y6Ym5Jclaim" href="#null" onclick="claim('STLX5hMNkNoZuBk3DaS1p4hTZBDtBjqBPTfDeZkAjH4YPUhTaU8Y5V4wXMvEXU8dCf1ejMJDqpYUdVMr48hEV3Y6Ym5J');" class="ui mini label  purple">CLAIM</a>
+							<a id="STLX5hMNkNoZuBk3DaS1p4hTZBDtBjqBPTfDeZkAjH4YPUhTaU8Y5V4wXMvEXU8dCf1ejMJDqpYUdVMr48hEV3Y6Ym5Junstake" href="#null" onclick="unstake('STLX5hMNkNoZuBk3DaS1p4hTZBDtBjqBPTfDeZkAjH4YPUhTaU8Y5V4wXMvEXU8dCf1ejMJDqpYUdVMr48hEV3Y6Ym5J');" class="ui mini label  red">UNSTAKE</a></td>
+							</tr>
 						 </table>
 						 </div>
 						</div>
@@ -723,17 +754,17 @@ a { color: #d0d0d0; }
 					</tr>
 				</tbody>
 			</table>
-      <div class="ui divider"></div>
-      <table class="ui inverted table">
-        <tr>
-          <td style="width:30%;"><img src="./assets/stlx.png" class="ui image circular avatar mini" /> Pending rewards <i>(STLX)</i></td>
-          <td style="width:30%;text-align:right;"><i class="trophy blue icon"></i> <span id="pending">0</span> STLX</td>
-          <td style="width:40%;text-align:right;">
-          <button onclick="claim();" style="margin:2px;" class="ui mini button purple">CLAIM</button>
-        </td>
-      </tr>
+			<div class="ui divider"></div>
+			<table class="ui inverted table">
+				<tr>
+					<td style="width:30%;"><img src="./assets/stlx.png" class="ui image circular avatar mini" /> Pending rewards <i>(STLX)</i></td>
+					<td style="width:30%;text-align:right;"><i class="trophy blue icon"></i> <span id="pending">0</span> STLX</td>
+					<td style="width:40%;text-align:right;">
+					<button onclick="claim('STLXffffffffff');" id="posclaim" style="margin:2px;" class="ui mini button purple">CLAIM</button>
+				</td>
+			</tr>
 			</table>
-		  </div>
+			</div>
 		</div>
 	</div>
 	<script>

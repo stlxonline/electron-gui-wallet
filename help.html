@@ -24,41 +24,13 @@ h2 { color: #fff; }
 }
 a { color: #d0d0d0; }
 </style>
-</head>
+<script src="./js/common.js"></script>
   <script>
-	const decimal = 100000000;
+  const decimal = 100000000;
 	const {ipcRenderer} = require('electron');
-	// send password to main.js
+
 	var address = ipcRenderer.sendSync('request', "address" );
-
-	function copytoclipboard() {
-	  var copyText = document.getElementById("address");
-	  copyText.select();
-	  copyText.setSelectionRange(0, 99999);
-	  document.execCommand("copy");
-	  alert("Copied the text: " + copyText.value);
-	}
-
-	function get_balance()
-	{
-		fetch('https://node1.stlx.online/api/?q=getbalance&address=' + address)
-		.then(response => response.text())
-		.then((response) => {
-			var obj = JSON.parse(response);
-			if(obj.balance > 100000000)	document.getElementById('available').innerHTML = (obj.balance/decimal).toFixed(2) + " STLX";
-			else document.getElementById('available').innerHTML = obj.balance/decimal + " STLX";
-			var prices = ipcRenderer.sendSync('request', "prices");
-			var jprices = JSON.parse(prices);
-			document.getElementById('availableusd').innerHTML = (obj.balance/decimal*jprices.STLX).toFixed(2);
-		});
-	}
-
-	function quit()
-	{
-		var mining = ipcRenderer.sendSync('request', "exit");
-		return;
-	}
-
+	var pubkey = ipcRenderer.sendSync('request', "pubkey" );
 	setInterval(function() {
 		if(document.getElementById('address').value != address)
 		{
@@ -72,10 +44,6 @@ a { color: #d0d0d0; }
 	setInterval(function() {
 		get_balance();
 	}, 30000);
-
-	function openexternal(link) {
-  require("electron").shell.openExternal(link);
-}
   </script>
 
   </head>
@@ -117,24 +85,18 @@ a { color: #d0d0d0; }
 			Copy
 		  </button></div><br><br>
 			<div style="text-align:left;" id="help">
-			  <h3>STLX GUI WALLET v0.1.5</h3>
+			  <h3>STLX GUI WALLET v0.1.6</h3>
 			  <div class="ui divider"></div>
 			  <p>This wallet was created using <a href="#null" onclick="openexternal('https://nodejs.org');">node.js</a> and <a href="#null" onclick="openexternal('https://electronjs.org');">Electron</a>.
 				You can find the source code on <a href="#null" onclick="openexternal('https://github.com/stlxonline/electron-gui-wallet');">Github</a>.</p>
 			  <p>Also, you can find source code of integrated miners here: <a href="#null" onclick="openexternal('https://github.com/stlxonline/cpuminer-opt-cpupower');">cpuminer-opt-cpupower</a>, <a href="#null" onclick="openexternal('https://github.com/stlxonline/python-stlx-miner');">python-stlx-miner</a>.</p>
-			  <p>Names, logos and brands from AQUA, EVOX, HAC, CPU, SUGAR and YTN are property of the respective owners of this projects. The usage of this names, logos and brands
+			  <p>Names, logos and brands from AQUA and HAC are property of the respective owners of this projects. The usage of this names, logos and brands
 				does not imply endorsement of any kind.</p>
 
 				<p>
 					<a href="#null" onclick="openexternal('https://aquachain.github.io/');" class="ui image label"><img style="margin-left:2px;" src="./assets/aqua.png">AQUACHAIN</a>
-					<a href="#null" onclick="openexternal('https://cpuchain.org');" class="ui image label"><img style="margin-left:2px;" src="./assets/cpu.png">CPUCHAIN</a>
-					<a href="#null" onclick="openexternal('https://evolutionproject.space');" class="ui image label"><img style="margin-left:2px;" src="./assets/evox.png">EVOLUTION</a>
 					<a href="#null" onclick="openexternal('https://hacash.org');" class="ui image label"><img style="margin-left:2px;" src="./assets/hac.png">HACASH</a>
-					<a href="#null" onclick="openexternal('https://sugarchain.org');" class="ui image label"><img style="margin-left:2px;" src="./assets/sugar.png">SUGARCHAIN</a>
-					<a href="#null" onclick="openexternal('https://yentencoin.info');" class="ui image label"><img style="margin-left:2px;" src="./assets/ytn.png">YENTEN</a>
-
 				</p>
-
 
 			  <p>If you are the owner of one of this projects and don't interested on be "part" of our project, just send as an email and we will remove any trace of your product.</p>
 			  <p>If you need support, you can contact with us using next channels:</p>

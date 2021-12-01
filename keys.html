@@ -33,34 +33,12 @@ a { color: #d0d0d0; }
 	const privkey = ipcRenderer.sendSync('request', "privkey" );
 	const rawallet = ipcRenderer.sendSync('request', "rawallet" );
 
-	function copytoclipboard() {
-	  var copyText = document.getElementById("address");
-	  copyText.select();
-	  copyText.setSelectionRange(0, 99999);
-	  document.execCommand("copy");
-	  alert("Copied the text: " + copyText.value);
-	}
-
 	function copytoclipboardkey() {
 	  var copyText = document.getElementById("privkey");
 	  copyText.select();
 	  copyText.setSelectionRange(0, 99999);
 	  document.execCommand("copy");
 	  alert("Copied the text: " + copyText.value);
-	}
-
-	function get_balance()
-	{
-		fetch('https://node1.stlx.online/api/?q=getbalance&address=' + address)
-		.then(response => response.text())
-		.then((response) => {
-			var obj = JSON.parse(response);
-			if(obj.balance > 100000000)	document.getElementById('available').innerHTML = (obj.balance/decimal).toFixed(2) + " STLX";
-			else document.getElementById('available').innerHTML = obj.balance/decimal + " STLX";
-			var prices = ipcRenderer.sendSync('request', "prices");
-			var jprices = JSON.parse(prices);
-			document.getElementById('availableusd').innerHTML = (obj.balance/decimal*jprices.STLX).toFixed(2);
-		});
 	}
 
 	setInterval(function() {

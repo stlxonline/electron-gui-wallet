@@ -3,6 +3,7 @@ const { generateKeyPairSync } = require('crypto');
 const { exec, spawn } = require('child_process');
 const fs = require('fs')
 const path = require('path').dirname(require.main.filename) + '/../../wallets/stlx.wallet'
+const walletsfolder = require('path').dirname(require.main.filename) + '/../../wallets/'
 //const regfile = require('path').dirname(require.main.filename) + '/../../stlx.reg'
 //const temppassfile = require('path').dirname(require.main.filename) + '/../../tmpp.txt'
 //const pathurl = require('path').dirname(require.main.filename).replace("\\resources\\app", "").replaceAll("\\", "\\\\");
@@ -18,38 +19,8 @@ global.b58pvkey = ""
 global.rawallet = ""
 global.txargs = ""
 global.iswallet = 0
+global.wallets = [];
 //global.tmppass = ""
-
-/*var regkey = 'REGEDIT4'
-regkey = regkey + "\n"
-regkey = regkey + "\n"
-regkey = regkey +'[HKEY_CLASSES_ROOT\\stlx]'
-regkey = regkey + "\n"
-regkey = regkey +'@="URL:stlx"'
-regkey = regkey + "\n"
-regkey = regkey + '"URL Protocol"=""'
-regkey = regkey + "\n"
-regkey = regkey + "\n"
-regkey = regkey +'[HKEY_CLASSES_ROOT\\stlx\\DefaultIcon]'
-regkey = regkey + "\n"
-regkey = regkey +'@="\\"' + pathurl + '\\\\stlx-wallet.exe\\""'
-regkey = regkey + "\n"
-regkey = regkey + "\n"
-regkey = regkey +'[HKEY_CLASSES_ROOT\\stlx\\shell]'
-regkey = regkey + "\n"
-regkey = regkey + "\n"
-regkey = regkey +'[HKEY_CLASSES_ROOT\\stlx\\shell\\open]'
-regkey = regkey + "\n"
-regkey = regkey + "\n"
-regkey = regkey +'[HKEY_CLASSES_ROOT\\stlx\\shell\\open\\command]'
-regkey = regkey + "\n"
-regkey = regkey +'@="\\"' + pathurl + '\\\\stlx-wallet.exe\\" \\"%1\\""'
-
-fs.writeFile(regfile, regkey, function(err) {
-	if(err) {
-		return console.log(err);
-	}
-});*/
 
 // receive message from create.html
 ipcMain.on('setToSign', (event, arg) => {
@@ -69,17 +40,6 @@ ipcMain.on('setPrices', (event, arg) => {
 	// send message to create.html
 	event.sender.send('setPrices-reply', "done");
 });
-
-/*ipcMain.on('setTMPPass', (event, arg) => {
-	pass = arg;
-	fs.writeFile(temppassfile, pass, function(err) {
-		if(err) {
-			return console.log(err);
-		}
-	});
-	// send message to create.html
-	event.sender.send('setTMPPass-reply', "done");
-});*/
 
 // receive message from create.html
 ipcMain.on('create-send', (event, arg) => {

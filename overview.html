@@ -25,67 +25,13 @@ h2 { color: #fff; }
 
 a { color: #d0d0d0; }
 </style>
-</head>
+<script src="./js/common.js"></script>
   <script>
 	const decimal = 100000000;
 	const {ipcRenderer} = require('electron');
-	// send password to main.js
+
 	var address = ipcRenderer.sendSync('request', "address" );
-
-	function copytoclipboard() {
-	  /* Get the text field */
-	  var copyText = document.getElementById("address");
-	  /* Select the text field */
-	  copyText.select();
-	  copyText.setSelectionRange(0, 99999); /* For mobile devices */
-	  /* Copy the text inside the text field */
-	  document.execCommand("copy");
-	  /* Alert the copied text */
-	  alert("Copied the text: " + copyText.value);
-	}
-
-	function timeSince(date) {
-
-	  var seconds = Math.floor(new Date() / 1000) - date;
-
-	  var interval = seconds / 31536000;
-
-	  if (interval > 1) {
-		return Math.floor(interval) + " years ago";
-	  }
-	  interval = seconds / 2592000;
-	  if (interval > 1) {
-		return Math.floor(interval) + " months ago";
-	  }
-	  interval = seconds / 86400;
-	  if (interval > 1) {
-		return Math.floor(interval) + " days ago";
-	  }
-	  interval = seconds / 3600;
-	  if (interval > 1) {
-		return Math.floor(interval) + " hours ago";
-	  }
-	  interval = seconds / 60;
-	  if (interval > 1) {
-		return Math.floor(interval) + " minutes ago";
-	  }
-	  return Math.floor(seconds) + " seconds ago";
-	}
-
-	function get_balance()
-	{
-		fetch('https://node1.stlx.online/api/?q=getbalance&address=' + address)
-		.then(response => response.text())
-		.then((response) => {
-			var obj = JSON.parse(response);
-			if(obj.balance > 100000000)	document.getElementById('available').innerHTML = (obj.balance/decimal).toFixed(2) + " STLX";
-			else document.getElementById('available').innerHTML = obj.balance/decimal + " STLX";
-			var prices = ipcRenderer.sendSync('request', "prices");
-			var jprices = JSON.parse(prices);
-			document.getElementById('availableusd').innerHTML = (obj.balance/decimal*jprices.STLX).toFixed(2);
-		});
-	}
-	
+	var pubkey = ipcRenderer.sendSync('request', "pubkey" );
 	function get_prices()
 	{
 		fetch('https://node1.stlx.online/prices.json')
@@ -134,12 +80,6 @@ a { color: #d0d0d0; }
 				}
 				document.getElementById('tokens').innerHTML = c;
 			});
-	}
-
-	function quit()
-	{
-		var mining = ipcRenderer.sendSync('request', "exit");
-		return;
 	}
 
 	setInterval(function() {

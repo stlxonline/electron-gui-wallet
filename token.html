@@ -24,47 +24,17 @@ h2 { color: #fff; }
 }
 a { color: #d0d0d0; }
 </style>
-</head>
+<script src="./js/common.js"></script>
   <script>
 	const decimal = 100000000;
-	var tokendecimal = 100000000;
 	const {ipcRenderer} = require('electron');
-	// send password to main.js 
+
 	var address = ipcRenderer.sendSync('request', "address" );
 	var pubkey = ipcRenderer.sendSync('request', "pubkey" );
+	var tokendecimal = 100000000;
 	
 	var queryDict = {};
 	location.search.substr(1).split("&").forEach(function(item) {queryDict[item.split("=")[0]] = item.split("=")[1]});
-	
-	async function postData(url = '', data = {}) {
-	  // Default options are marked with *
-	  const response = await fetch(url, {
-		method: 'POST', // *GET, POST, PUT, DELETE, etc.
-		mode: 'cors', // no-cors, *cors, same-origin
-		cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
-		credentials: 'same-origin', // include, *same-origin, omit
-		headers: {
-		  'Content-Type': 'application/json'
-		  //'Content-Type': 'application/x-www-form-urlencoded',
-		},
-		redirect: 'follow', // manual, *follow, error
-		referrerPolicy: 'no-referrer', // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
-		body: data // body data type must match "Content-Type" header
-	  });
-	  return response.json(); // parses JSON response into native JavaScript objects
-	}
-	
-	function copytoclipboard() {
-	  /* Get the text field */
-	  var copyText = document.getElementById("address");
-	  /* Select the text field */
-	  copyText.select();
-	  copyText.setSelectionRange(0, 99999); /* For mobile devices */
-	  /* Copy the text inside the text field */
-	  document.execCommand("copy");
-	  /* Alert the copied text */
-	  alert("Copied the text: " + copyText.value);
-	}
 	
 	function send()
 	{
@@ -74,6 +44,7 @@ a { color: #d0d0d0; }
 		var dest = document.getElementById('dest').value;
 		amount = parseInt(amount);
 		var fee = 300;
+		
 		var message = "";
 		
 		if(dest.length == 42 && dest.substring(0, 2) == "0x")
@@ -109,20 +80,6 @@ a { color: #d0d0d0; }
 				}
 			  });
 		}
-	}
-	
-	function get_balance()
-	{
-		fetch('https://node1.stlx.online/api/?q=getbalance&address=' + address)
-		.then(response => response.text())
-		.then((response) => {
-			var obj = JSON.parse(response);
-			if(obj.balance > 100000000)	document.getElementById('available').innerHTML = (obj.balance/decimal).toFixed(2) + " STLX";
-			else document.getElementById('available').innerHTML = obj.balance/decimal + " STLX";
-			var prices = ipcRenderer.sendSync('request', "prices");
-			var jprices = JSON.parse(prices);
-			document.getElementById('availableusd').innerHTML = (obj.balance/decimal*jprices.STLX).toFixed(2);
-		});
 	}
 	
 	function setbalance(value)
@@ -169,12 +126,6 @@ a { color: #d0d0d0; }
 		});
 	}
 
-	function quit()
-	{
-		var mining = ipcRenderer.sendSync('request', "exit");
-		return;
-	}
-
 	setInterval(function() {
 		if(document.getElementById('address').value != address)
 		{
@@ -193,12 +144,6 @@ a { color: #d0d0d0; }
 			document.getElementById('sendbutton').classList.add("disabled");
 		}
 	}, 250);
-		
-	function startmining()
-	{
-		var mining = ipcRenderer.sendSync('request', "startmining");
-		return;
-	}
 		
 	setInterval(function() {
 		get_balance();
@@ -253,11 +198,11 @@ a { color: #d0d0d0; }
 			<div id="send" style="display:none">
 			 <div class="ui tiny input" style="width:100%;"><input type="text" id="dest" placeholder="Destination address..." ></div><br><br>
 			 <div id="bsc" style="display:none;">BSC address detected: Your tokens will be sent to Binance Smart Chain. The process will take some minutes.<br><br>
-			 <span class="ui label blue">Fee: <b>100 STLX</b></span><br><br></div>
+			 <span class="ui label blue">Fee: <b>FREE</b></span><br><br></div>
 			 <div id="aqua" style="display:none;">AQUA address detected: Your tokens will be sent to Aquachain. The process will take some minutes.<br><br>
-			 <span class="ui label blue">Fee: <b>100 STLX</b></span><br><br></div>
+			 <span class="ui label blue">Fee: <b>FREE</b></span><br><br></div>
 			 <div id="bscnc" style="display:none;">BSC address detected: This token is not compatible with Binance Smart Chain. If you continue, your tokens will be lost.<br><br>
-			 <span class="ui label blue">Fee: <b>100 STLX</b></span><br><br></div>
+			 <span class="ui label blue">Fee: <b>FREE</b></span><br><br></div>
 			 <div class="ui tiny input" style="width:100%;"><input type="text" id="amount" placeholder="Token amount..."></div><br><br>
 			 <input type="hidden" id="tokendecimal" value="100000000">
 			<div class="ui buttons">
